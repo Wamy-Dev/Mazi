@@ -38,24 +38,17 @@ async def help(ctx):
 @client.command(pass_context = True)
 async def link(ctx):
     #gets user info
-    messageembed = discord.Embed(title = "Link your plex and your discord", color= discord.Color.from_rgb(160,131,196))
+    messageembed = discord.Embed(title = "Link your plex and your discord", color= discord.Color.from_rgb(160,131,196), description="🔗 Please check your pm's to link your accounts.")
     messageembed.set_author(name = ctx.message.author, icon_url = ctx.author.avatar_url)
-    messageembed.add_field(name = '🔗', value='Please check your pms to link your accounts', inline = True)
     messageembed.set_footer(text=f'This method is temporary and will be fixed in the future.')
-    dmembed = discord.Embed(title = "Plex Username", color= discord.Color.from_rgb(160,131,196))
+    dmembed = discord.Embed(title = "🤝 Please enter your Plex username.", color= discord.Color.from_rgb(160,131,196), description="⚠ Please read [here](https://github.com/Wamy-Dev/Mazi) about Mazi data safety. Your data is secure and encrypted with [Argon2id](https://en.wikipedia.org/wiki/Argon2).")
     dmembed.set_author(name = ctx.message.author, icon_url = ctx.author.avatar_url)
-    dmembed.add_field(name = '🤝', value='Please enter your  Plex username.', inline = True)
-    dmembed.add_field(name = '⚠', value='Please read [here](https://github.com/Wamy-Dev/Mazi) about Mazi data safety. Your data is secure and encrypted with [Argon2id](https://en.wikipedia.org/wiki/Argon2).', inline = False)
     dmembed.set_footer(text=f'This method is temporary and will be fixed in the future.')
-    dmpassembed = discord.Embed(title = "Plex Password", color= discord.Color.from_rgb(160,131,196))
+    dmpassembed = discord.Embed(title = "🤝 Please enter your Plex password.", color= discord.Color.from_rgb(160,131,196), description="⚠ Please read [here](https://github.com/Wamy-Dev/Mazi) about Mazi data safety. Your data is secure and encrypted with [Argon2id](https://en.wikipedia.org/wiki/Argon2).")
     dmpassembed.set_author(name = ctx.message.author, icon_url = ctx.author.avatar_url)
-    dmpassembed.add_field(name = '🤝', value='Please enter your Plex password.', inline = True)
-    dmpassembed.add_field(name = '⚠', value='Please read [here](https://github.com/Wamy-Dev/Mazi) about Mazi data safety. Your data is secure and encrypted with [Argon2id](https://en.wikipedia.org/wiki/Argon2).', inline = False)
     dmpassembed.set_footer(text=f'This method is temporary and will be fixed in the future.')
-    dmserverembed = discord.Embed(title = "Plex Servername", color= discord.Color.from_rgb(160,131,196))
+    dmserverembed = discord.Embed(title = "🤝 Please enter your Plex servername.", color= discord.Color.from_rgb(160,131,196), description="⚠ Please read [here](https://github.com/Wamy-Dev/Mazi) about Mazi data safety. Your data is secure and encrypted with [Argon2id](https://en.wikipedia.org/wiki/Argon2).")
     dmserverembed.set_author(name = ctx.message.author, icon_url = ctx.author.avatar_url)
-    dmserverembed.add_field(name = '🤝', value='Please enter your Plex servername.', inline = True)
-    dmserverembed.add_field(name = '⚠', value='Please read [here](https://github.com/Wamy-Dev/Mazi) about Mazi data safety. Your data is secure and encrypted with [Argon2id](https://en.wikipedia.org/wiki/Argon2).', inline = False)
     dmserverembed.set_footer(text=f'This method is temporary and will be fixed in the future.')
     await ctx.send(embed = messageembed)#tells user to link
     member = ctx.message.author
@@ -69,18 +62,18 @@ async def link(ctx):
         await ctx.message.author.send(embed = dmserverembed) 
         servername = await client.wait_for('message', check = lambda x: x.channel == member.dm_channel and x.author == member, timeout=30)
         servername = servername.content
-        await ctx.message.author.send('```Please be patient while I check your credentials. This will be a couple moments.```')
+        await ctx.message.author.send('```⏰ Please be patient while I check your credentials. This will be a couple moments. ⏰```')
         try:
             account = MyPlexAccount(username, password)
             plex = account.resource(servername).connect()
             movies = plex.library.section('Movies')
             for video in movies.search(unwatched=True):
                 print(video.title)
-            await ctx.message.author.send('```Encrypted and saved your credentials. You are now able to host watch together sessions.```')
+            await ctx.message.author.send('```✔ Encrypted and saved your credentials. You are now able to host watch together sessions. ✔```')
         except:
             await ctx.message.author.send('```❌ Your credentials are incorrect. Please try again. ❌```')
     except asyncio.TimeoutError:
-        await ctx.message.author.send('```Timed out, please run >link again in the server.```')
+        await ctx.message.author.send('```❌ Timed out, please run >link again in the server. ❌```')
         
 
 
