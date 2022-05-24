@@ -16,4 +16,4 @@ A discord bot to watch plex with your friends.
 - [ ] Fast
 
 # Safety
-For those who want to host your own watch together session with friends, a linked plex account is required. When you run ```>link``` the bot dms you for your credentials and tests them. If the test is successful, the bot encrypts them with Argon2id, and stores them in a secure database. You can always dm the bot and request for your information to be deleted as well.
+For those who want to host your own watch together session with friends, a linked plex account is required. When you run ```>link``` the bot dms you for your credentials and tests them. If the test is successful, the bot encrypts them with Argon2id, and stores them in a secure database. You can always run ```>unlink``` to unlink your accounts which deletes them from the database.
