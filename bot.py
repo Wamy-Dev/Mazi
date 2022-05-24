@@ -4,9 +4,20 @@ from discord.ext import commands
 from plexapi.server import PlexServer
 from decouple import config
 import asyncio
+from argon2 import PasswordHasher
+import sqlite3
 
 CLIENTTOKEN = config('CLIENTTOKEN')
 client = commands.Bot(command_prefix = '>')
+ph = PasswordHasher()
+
+
+try: 
+    connection = sqlite3.connect("creds.db")
+    cursor = connection.cursor()
+    cursor.execute("CREATE TABLE creds (discordid TEXT, plexuser TEXT, plexpass TEXT, plexserver TEXT)")
+except:
+    print("cannot make table")
 client.remove_command('help')
 @client.event
 async def on_ready():
@@ -52,6 +63,7 @@ async def link(ctx):
     dmserverembed.set_footer(text=f'This method is temporary and will be fixed in the future.')
     await ctx.send(embed = messageembed)#tells user to link
     member = ctx.message.author
+    discordid = ctx.message.author.id
     await ctx.message.author.send(embed = dmembed)
     try:
         username = await client.wait_for('message', check = lambda x: x.channel == member.dm_channel and x.author == member, timeout=30)
@@ -62,18 +74,22 @@ async def link(ctx):
         await ctx.message.author.send(embed = dmserverembed) 
         servername = await client.wait_for('message', check = lambda x: x.channel == member.dm_channel and x.author == member, timeout=30)
         servername = servername.content
-        await ctx.message.author.send('```⏰ Please be patient while I check your credentials. This will be a couple moments. ⏰```')
+        await ctx.message.author.send('```⏰ Please be patient while I check your credentials. This will be a couple moments.```')
         try:
             account = MyPlexAccount(username, password)
             plex = account.resource(servername).connect()
-            movies = plex.library.section('Movies')
-            for video in movies.search(unwatched=True):
-                print(video.title)
-            await ctx.message.author.send('```✔ Encrypted and saved your credentials. You are now able to host watch together sessions. ✔```')
+            passwordhash = ph.hash(password)#uses argon2id. Thanks to Capitaine J. Sparrow#0096 for the advice.
+            if ph.verify(passwordhash, password):
+                cursor.execute(f'INSERT INTO creds VALUES ({discordid}, {username}, {passwordhash}, {servername})')
+                password = "null"#wipes previous password from mem
+                print(passwordhash)
+            else:
+                print("Failed to hash")
+            await ctx.message.author.send('```✔ Encrypted and saved your credentials. You are now able to host watch together sessions.```')
         except:
-            await ctx.message.author.send('```❌ Your credentials are incorrect. Please try again. ❌```')
+            await ctx.message.author.send('```❌ Your credentials are incorrect. Please try again.```')
     except asyncio.TimeoutError:
-        await ctx.message.author.send('```❌ Timed out, please run >link again in the server. ❌```')
+        await ctx.message.author.send('```❌ Timed out, please run >link again in the server.```')
         
 
 
