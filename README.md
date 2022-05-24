@@ -1,7 +1,8 @@
 # Mazi
 A discord bot to watch plex with your friends.
 
-
+# Only trust the bot @Mazi#2364 with your data!
+People may try to impersonate the bot to try and steal your information, but until I make a new linking system, only trust the bot @Mazi#2364.
 # How does this work?
 1. First you connect your plex account with discord and choose which library you would like to share from.
 2. Then when you and your friends want to watch a movie, you choose whether you want to make a poll to decide the movie or you search for a movie yourself.
