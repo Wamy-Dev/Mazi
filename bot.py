@@ -1,3 +1,4 @@
+from socket import timeout
 from plexapi.myplex import MyPlexAccount
 import discord
 from discord.ext import commands
@@ -6,8 +7,18 @@ from decouple import config
 import asyncio
 from argon2 import PasswordHasher
 import sqlite3
+class Bot(commands.Bot):
+    def __init__(self):
+        intents = discord.Intents.default()
+        intents.message_content = True
+
+        super().__init__(command_prefix=commands.when_mentioned_or('>'), intents=intents)
+
+    async def on_ready(self):
+        print(f'Logged in as {self.user} (ID: {self.user.id})')
+        print('------')
+client = Bot()
 CLIENTTOKEN = config('CLIENTTOKEN')
-client = commands.Bot(command_prefix = '>')
 ph = PasswordHasher()
 try: 
     connection = sqlite3.connect("creds.db")
@@ -37,7 +48,7 @@ async def ping(ctx):
 @client.command(pass_context = True, aliases = ['Help', "h"])
 async def help(ctx):
     embed = discord.Embed(title = "Here is a command list:", color= discord.Color.from_rgb(160,131,196))
-    embed.set_author(name = ctx.message.author, icon_url = ctx.author.avatar_url)
+    embed.set_author(name = ctx.message.author, icon_url = ctx.author.avatar.url)
     embed.add_field(name = '>ping', value='Shows the ping between the bot and the user.', inline = False)
     embed.add_field(name = '>project', value='View the project github.', inline = False)
     embed.add_field(name = '>donate', value='Donate to the project.', inline = False)
@@ -54,17 +65,17 @@ async def link(ctx):
     if len(cursor.fetchall()) > 0:
         await ctx.send("```✔ Your account is already linked.```")
     else: 
-        messageembed = discord.Embed(title = "Link your plex and your discord", color= discord.Color.from_rgb(160,131,196), description="🔗 Please check your pm's to link your accounts.")
-        messageembed.set_author(name = ctx.message.author, icon_url = ctx.author.avatar_url)
-        messageembed.set_footer(text=f'This method is temporary and will be fixed in the future.')
-        dmembed = discord.Embed(title = "🤝 Please enter your Plex username.", color= discord.Color.from_rgb(160,131,196), description="⚠ Please read [here](https://github.com/Wamy-Dev/Mazi) about Mazi data safety. Your data is secure and encrypted with [Argon2id](https://en.wikipedia.org/wiki/Argon2). If @Mazi#2364 did not send you this message please ignore it.")
-        dmembed.set_author(name = ctx.message.author, icon_url = ctx.author.avatar_url)
+        messageembed = discord.Embed(title = "Link your Plex and your Discord", color= discord.Color.from_rgb(160,131,196), description="🔗 Please check your pm's to link your accounts.")
+        messageembed.set_author(name = ctx.message.author, icon_url = ctx.author.avatar.url)
+        messageembed.set_footer(text=f'This method is temporary and will be fixed in the future. Only send sensitive data to Mazi#2364. ♥')
+        dmembed = discord.Embed(title = "🤝 Please enter your Plex username.", color= discord.Color.from_rgb(160,131,196), description="⚠ Please read [here](https://github.com/Wamy-Dev/Mazi) about Mazi data safety. Your data is secure and encrypted with [Argon2id](https://en.wikipedia.org/wiki/Argon2). Only respond with your credentials if <@!978163786886311977> sent you this message, otherwise please ignore it.")
+        dmembed.set_author(name = ctx.message.author, icon_url = ctx.author.avatar.url)
         dmembed.set_footer(text=f'This method is temporary and will be fixed in the future.')
-        dmpassembed = discord.Embed(title = "🤝 Please enter your Plex password.", color= discord.Color.from_rgb(160,131,196), description="⚠ Please read [here](https://github.com/Wamy-Dev/Mazi) about Mazi data safety. Your data is secure and encrypted with [Argon2id](https://en.wikipedia.org/wiki/Argon2). If @Mazi#2364 did not send you this message please ignore it.")
-        dmpassembed.set_author(name = ctx.message.author, icon_url = ctx.author.avatar_url)
+        dmpassembed = discord.Embed(title = "🤝 Please enter your Plex password.", color= discord.Color.from_rgb(160,131,196), description="⚠ Please read [here](https://github.com/Wamy-Dev/Mazi) about Mazi data safety. Your data is secure and encrypted with [Argon2id](https://en.wikipedia.org/wiki/Argon2). Only respond with your credentials if <@!978163786886311977> sent you this message, otherwise please ignore it.")
+        dmpassembed.set_author(name = ctx.message.author, icon_url = ctx.author.avatar.url)
         dmpassembed.set_footer(text=f'This method is temporary and will be fixed in the future.')
-        dmserverembed = discord.Embed(title = "🤝 Please enter your Plex servername.", color= discord.Color.from_rgb(160,131,196), description="⚠ Please read [here](https://github.com/Wamy-Dev/Mazi) about Mazi data safety. Your data is secure and encrypted with [Argon2id](https://en.wikipedia.org/wiki/Argon2). If @Mazi#2364 did not send you this message please ignore it.")
-        dmserverembed.set_author(name = ctx.message.author, icon_url = ctx.author.avatar_url)
+        dmserverembed = discord.Embed(title = "🤝 Please enter your Plex servername.", color= discord.Color.from_rgb(160,131,196), description="⚠ Please read [here](https://github.com/Wamy-Dev/Mazi) about Mazi data safety. Your data is secure and encrypted with [Argon2id](https://en.wikipedia.org/wiki/Argon2). Only respond with your credentials if <@!978163786886311977> sent you this message, otherwise please ignore it.")
+        dmserverembed.set_author(name = ctx.message.author, icon_url = ctx.author.avatar.url)
         dmserverembed.set_footer(text=f'This method is temporary and will be fixed in the future.')
         await ctx.send(embed = messageembed)#tells user to link
         member = ctx.message.author
@@ -104,20 +115,43 @@ async def unlink(ctx):
     discordid = ctx.message.author.id
     query = cursor.execute(f"SELECT * FROM creds WHERE discordid = {discordid}")
     if len(cursor.fetchall()) > 0:
-        embed = discord.Embed(title = "Type 'YES' to delete link", color= discord.Color.from_rgb(160,131,196), description="⚠ Are you sure you want to unlink your account? If not do not respond or type anything other than 'YES'.")
-        embed.set_author(name = ctx.message.author, icon_url = ctx.author.avatar_url)
-        embed.set_footer(text=f'If you want to relink in the future, run >link again.')
-        await ctx.send(embed=embed)
-        try:
-            confirm = await client.wait_for('message', timeout=30)
-            if confirm.content == "YES":
+        class Confirm(discord.ui.View):
+            def __init__(self, ctx):
+                super().__init__(timeout=30)
+                self.value = None
+                self.ctx = ctx
+            @discord.ui.button(label='Confirm', style=discord.ButtonStyle.red)
+            async def confirm(self, interaction: discord.Interaction, button: discord.ui.Button):
+                await interaction.response.send_message('Deleting link.', ephemeral=True)
                 cursor.execute(f"DELETE FROM creds WHERE discordid = {discordid}")
                 connection.commit()
                 await ctx.send("```🖐 Unlinked account. If you would like to relink in the future, run >link again.```")
-            else:
-                await ctx.send("```❌ Aborted by user. Did not delete link.```")
-        except asyncio.TimeoutError:
-                await ctx.message.author.send('```❌ Timed out, please run >unlink again if you want to.```')
+                self.value = True
+                self.stop()
+            @discord.ui.button(label='Cancel', style=discord.ButtonStyle.grey)
+            async def cancel(self, interaction: discord.Interaction, button: discord.ui.Button):
+                await interaction.response.send_message("```❌ Aborted by user. Did not delete link.```", ephemeral=False)
+                self.value = False
+                self.stop()
+            async def on_timeout(self):
+                await self.ctx.send("```❌ Timed out, did not delete link. If you meant to delete link, please run >unlink again and click confirm.```")
+
+        embed = discord.Embed(title = "Click confirm to delete link", color= discord.Color.from_rgb(160,131,196), description="⚠ Are you sure you want to unlink your account? If not please click the cancel button.")
+        embed.set_author(name = ctx.message.author, icon_url = ctx.author.avatar.url)
+        embed.set_footer(text=f'If you want to relink in the future, run >link again.')
+        view = Confirm(ctx)
+        await ctx.send(embed=embed, view=view)
+        await view.wait()
+        if view.value is None:
+            ctx.send("```❌ Timed out, did not delete link. If you meant to delete link, please run >unlink again and click confirm.```")
     else:
         await ctx.send("```❌ You don't have an account linked to unlink...```")
+@client.command(pass_context = True)
+async def watch(ctx):
+    discordid = ctx.message.author.id
+    query = cursor.execute(f"SELECT * FROM creds WHERE discordid = {discordid}")
+    if len(cursor.fetchall()) > 0:
+        await ctx.send("```Would you like to host a movie room or a tv show room?```")
+    else:
+        await ctx.send("```❌ You do not have a linked account. If you would like to host a room, please run >link. Please also make sure your Plex server is powerful enough to host a room.```")
 client.run(CLIENTTOKEN)
