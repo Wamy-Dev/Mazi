@@ -129,3 +129,5 @@ dmypy.json
 .pyre/
 creds.db
 USEFUL.txt
+commands/**
+resources/**
