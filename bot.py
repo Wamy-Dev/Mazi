@@ -39,7 +39,6 @@ class Bot(commands.Bot):
         print(f'Logged in as {self.user} (ID: {self.user.id})')
         print('------')
 client = Bot()
-
 #all flask
 app = Flask(__name__)
 @app.route("/", methods = ["get"])
@@ -169,7 +168,6 @@ async def run_blocking(blocking_func: typing.Callable, *args, **kwargs) -> typin
     """Runs a blocking function in a non-blocking way"""
     func = functools.partial(blocking_func, *args, **kwargs) # `run_in_executor` doesn't support kwargs, `functools.partial` does
     return await client.loop.run_in_executor(None, func)
-
 def hash(password, discordemail):#thanks Capitaine J. Sparrow#0096 for the base code for this system
     kdf = Scrypt(
         salt=SALT,
@@ -208,8 +206,8 @@ async def link(ctx):
     cursor = connection.cursor()
     query = cursor.execute(f"SELECT * FROM creds WHERE discordid = ?", (discordid,))
     if len(cursor.fetchall()) > 0:
-        query = cursor.execute(f"SELECT discordemail FROM creds WHERE discordid = ?", (discordid,)).fetchall()
-        if len(query) == 0:
+        query = cursor.execute(f"SELECT plexpass FROM creds WHERE discordid = ?", (discordid,)).fetchall()
+        if len(query) > 0:
             await ctx.send("```✔ Your account is already linked.```")
         else: 
             await ctx.send("```❌ You did not finish linking your account. Please run >unlink and then >link again to restart the process.```")
@@ -273,12 +271,10 @@ async def link(ctx):
                         await ctx.message.author.send('```✔ Encrypted and saved your credentials. You are now able to host watch together sessions.```')
                     except:
                         await ctx.message.author.send('```❌ Your credentials are incorrect. Please try again.```')
-                    
                 except asyncio.TimeoutError:
                     await ctx.message.author.send('```❌ Timed out, please run >link again in the server.```')
         except asyncio.TimeoutError: 
             await ctx.send('```❌ Timed out, please run >link again.```')
-
 
         
             
