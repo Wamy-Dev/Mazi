@@ -4,14 +4,17 @@
 <title>Mazi Success</title>
 <head>
     <link rel= "stylesheet" type= "text/css" href= "{{ url_for('static',filename='styles.css') }}">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Work+Sans">
   </head>
 </head>
 <body>
 
-<h1>If you see this page, please close your tab. You do not need it anymore.</h1>
-<p>yes this page will look better and not as sus lmao.</p>
 <div class="card">
-    Magic Card
+  <h1>Thank you for authorizing your account.</h1>
+  <p>You may now close this page.</p>
+  <br>
+  <img src="{{ useravatar }}">
+  <p>{{ username}}#{{ userdis }}</p>
   </div>
 </body>
 </html>

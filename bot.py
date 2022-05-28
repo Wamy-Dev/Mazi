@@ -2,9 +2,8 @@ import discord
 from discord.ext import commands
 from decouple import config
 import sqlite3
-from flask import Flask, request, redirect, render_template
+from quart import Quart, request, redirect, render_template
 import requests
-from waitress import serve
 import threading
 import asyncio
 from plexapi.myplex import MyPlexAccount
@@ -13,8 +12,10 @@ import typing
 from Crypto.Cipher import AES
 from cryptography.hazmat.primitives.kdf.scrypt import Scrypt
 import base64
-import time
+from hypercorn.config import Config
+from hypercorn.asyncio import serve
 import aiosqlite
+from waitress import serve
 #import logging
 #logging.basicConfig(level=logging.DEBUG)
 CLIENT_ID = '978163786886311977'
@@ -39,16 +40,22 @@ class Bot(commands.Bot):
         print(f'Logged in as {self.user} (ID: {self.user.id})')
         print('------')
 client = Bot()
-#all flask
-app = Flask(__name__)
+#all quart
+app = Quart(__name__)
 @app.route("/", methods = ["get"])
-def index():
-    return render_template('index.html')
+async def index():
+    return await render_template('index.html')
+@app.errorhandler(404)
+async def page_not_found(e):
+    return await render_template('error.html'), 404
+@app.errorhandler(500)
+async def servererror(e):
+    return await render_template('error.html'), 500
 @app.route("/login", methods = ["get"])
 def login():
     return redirect(DISCORD_LOGIN)
 @app.route("/success", methods = ["get"])
-def success():
+async def success():
     code = request.args.get("code")
     useraccesstoken = getaccesstoken(code)
     userdata = getuserdata(useraccesstoken)
@@ -56,12 +63,15 @@ def success():
     userid = userdata.get("id")
     userid = str(userid)
     useravatar = userdata.get("avatar")
+    username = userdata.get("username")
+    userdis = userdata.get("discriminator")
     useravatar = (f"https://cdn.discordapp.com/avatars/{userid}/"+useravatar+".png")
-    connection = sqlite3.connect("creds.db")
-    cursor = connection.cursor()
-    cursor.execute("INSERT INTO creds(discordid, discordemail) VALUES(?, ?)", (userid, useremail,))
-    connection.commit()
-    return render_template('success.html', useravatar = useravatar)
+    db = await aiosqlite.connect("creds.db")
+    cursor = await db.execute("INSERT INTO creds(discordid, discordemail) VALUES(?, ?)", (userid, useremail,))
+    await db.commit()
+    await cursor.close()
+    await db.close()
+    return await render_template('success.html', useravatar = useravatar, username = username, userdis = userdis)
 def getaccesstoken(code):
     payload = {
        "client_id": CLIENT_ID,
@@ -85,8 +95,10 @@ def getuserdata(useraccesstoken):
     userdata = requests.get(url = url, headers = headers)
     userjson = userdata.json()
     return userjson
+app.register_error_handler(404, page_not_found)
+app.register_error_handler(500, servererror)
 def web():
-    serve(app, host="127.0.0.1", port=5000)
+    app.run()
 #makes db if it does not exist
 try: 
     connection = sqlite3.connect("creds.db")
@@ -130,8 +142,10 @@ async def help(ctx):
 #unlink
 async def unlink(ctx):
     discordid = ctx.message.author.id
-    query = cursor.execute(f"SELECT * FROM creds WHERE discordid = ?", (discordid,))
-    if len(cursor.fetchall()) > 0:
+    db = await aiosqlite.connect("creds.db")
+    cursor = await db.execute("SELECT * FROM creds WHERE discordid = ?", (discordid,))
+    data = await cursor.fetchall()
+    if len(data) > 0:
         class Confirm(discord.ui.View):
             def __init__(self, ctx):
                 super().__init__(timeout=30)
@@ -139,8 +153,10 @@ async def unlink(ctx):
                 self.ctx = ctx
             @discord.ui.button(label='Confirm', style=discord.ButtonStyle.red)
             async def confirm(self, interaction: discord.Interaction, button: discord.ui.Button):
-                cursor.execute(f"DELETE FROM creds WHERE discordid = ?", (discordid,))
-                connection.commit()
+                cursor = await db.execute("DELETE FROM creds WHERE discordid = ?", (discordid,))
+                await db.commit()
+                await cursor.close()
+                await db.close()
                 await interaction.response.send_message("```🖐 Unlinked account. If you would like to relink in the future, run >link again.```", ephemeral=False)
                 self.value = True
                 self.stop()
@@ -202,12 +218,13 @@ async def link(ctx):
     #checks if user is linked first
     discordid = ctx.message.author.id
     discordid = str(discordid)
-    connection = sqlite3.connect("creds.db")
-    cursor = connection.cursor()
-    query = cursor.execute(f"SELECT * FROM creds WHERE discordid = ?", (discordid,))
-    if len(cursor.fetchall()) > 0:
-        query = cursor.execute(f"SELECT plexpass FROM creds WHERE discordid = ?", (discordid,)).fetchall()
-        if len(query) > 0:
+    db = await aiosqlite.connect("creds.db")
+    cursor = await db.execute("SELECT * FROM creds WHERE discordid = ?", (discordid,))   
+    data =  await cursor.fetchall()
+    if len(data) > 0:
+        cursor = await db.execute("SELECT plexpass FROM creds WHERE discordid = ?", (discordid,))
+        data =  await cursor.fetchall()
+        if len(data) > 0:
             await ctx.send("```✔ Your account is already linked.```")
         else: 
             await ctx.send("```❌ You did not finish linking your account. Please run >unlink and then >link again to restart the process.```")
@@ -218,8 +235,7 @@ async def link(ctx):
         firstmessageembed.set_footer(text=f'You have 60 seconds to authorize.')
         await ctx.send(embed = firstmessageembed)
         #wait until email is available
-        db = await aiosqlite.connect("creds.db")
-        cursor = await db.execute(f"SELECT discordemail FROM creds WHERE discordid = ?", (discordid,))
+        cursor = await db.execute("SELECT discordemail FROM creds WHERE discordid = ?", (discordid,))
         data = await cursor.fetchall()
         try:
             while len(data) == 0:
@@ -256,16 +272,17 @@ async def link(ctx):
                     try:
                         r = await run_blocking(blocking_func, username, password, servername,)
                         #now to encrypt passwords
+                        db = await aiosqlite.connect("creds.db")
                         cursor = await db.execute(f"SELECT discordemail FROM creds WHERE discordid = ?", (discordid,))
-                        discordemail = await cursor.fetchall()
-                        discordemail = discordemail[0][0]
+                        data = await cursor.fetchall()
+                        discordemail = data[0][0]
                         encryptedpwd = hash(password, discordemail)
                         password = "NULL"#wiping from mem
                         discordemail = "NULL"#wiping from mem
-                        try:
+                        try:  
                             delete = await db.execute("UPDATE creds SET discordemail=NULL WHERE discordid = ?", (discordid,))
                             commit = await db.commit()
-                            insert = await db.execute("UPDATE creds SET plexuser=?, plexpass=?, plexserver=? WHERE discordid = ?", (username, encryptedpwd, servername,discordid,))
+                            insert = await db.execute("UPDATE creds SET plexuser=?, plexpass=?, plexserver=? WHERE discordid = ?", (username, encryptedpwd, servername, discordid,))
                             commit = await db.commit()
                         except Exception as e: print(e)
                         await ctx.message.author.send('```✔ Encrypted and saved your credentials. You are now able to host watch together sessions.```')
@@ -275,13 +292,18 @@ async def link(ctx):
                     await ctx.message.author.send('```❌ Timed out, please run >link again in the server.```')
         except asyncio.TimeoutError: 
             await ctx.send('```❌ Timed out, please run >link again.```')
+@client.command(pass_context = True)#NOT A REAL COMMAND
+async def login(ctx):
+    #JUST BASE TESTING
+    discordemail = "oooga booga"
+    encrypted_pwd = "some super long password"
+    #get encrypted_pwd
+    password = login(discordemail, encrypted_pwd)
+    print(password)
 
-        
-            
-
-
-
-        
+@client.command(pass_context = True)
+async def watch(ctx):
+    await ctx.send("wip")
 
 threading.Thread(target=web, daemon=True).start()#starts web app
 client.run(CLIENTTOKEN)
