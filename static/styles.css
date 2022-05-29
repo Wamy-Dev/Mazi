@@ -19,7 +19,7 @@ body {
   padding-top: 2rem;
   padding-bottom: 2rem;
   box-sizing: border-box;
-  font-family: "Work Sans", sans-serif;
+  font-family: "Ubuntu", sans-serif;
   overflow: hidden;
 }
 
@@ -83,7 +83,7 @@ body {
     --rotate: 360deg;
   }
 }
-img {
+.avatar {
   border-radius: 50%;
   border: 5px solid #E5A00D;
 }
@@ -96,4 +96,8 @@ p {
   font: 15px;
   color: white;
   font-weight: 300;
+}
+a {
+  text-decoration: none;
+  color: white;
 }

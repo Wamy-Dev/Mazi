@@ -1,3 +1,4 @@
+from pydoc import plain
 import discord
 from discord.ext import commands
 from decouple import config
@@ -67,8 +68,15 @@ async def success():
     userdis = userdata.get("discriminator")
     useravatar = (f"https://cdn.discordapp.com/avatars/{userid}/"+useravatar+".png")
     db = await aiosqlite.connect("creds.db")
-    cursor = await db.execute("INSERT INTO creds(discordid, discordemail) VALUES(?, ?)", (userid, useremail,))
-    await db.commit()
+    #check if creds already exists
+    cursor = await db.execute("SELECT * FROM creds WHERE discordid = ?", (userid,))
+    data = await cursor.fetchall()
+    if len(data) > 0:
+        cursor = await db.execute("UPDATE creds SET discordemail= ? WHERE discordid = ?", (useremail, userid,))
+        await db.commit()
+    else:
+        cursor = await db.execute("INSERT INTO creds(discordid, discordemail) VALUES(?, ?)", (userid, useremail,))
+        await db.commit()
     await cursor.close()
     await db.close()
     return await render_template('success.html', useravatar = useravatar, username = username, userdis = userdis)
@@ -195,10 +203,8 @@ def hash(password, discordemail):#thanks Capitaine J. Sparrow#0096 for the base 
     DERIVATED_SALT = kdf.derive(str.encode(discordemail))
     encryption_suite = AES.new(DERIVATED_SALT, AES.MODE_CBC, SALT)
     encrypted_pwd = encryption_suite.encrypt(password.encode() * 16)
-    encrypted_pwd = base64.b64encode(encrypted_pwd)
-    encrypted_pwd = encrypted_pwd.decode()
-    return encrypted_pwd#returns base64string
-def login(discordemail, encrypted_pwd):#thanks Capitaine J. Sparrow#0096 for the base code for this system
+    return encrypted_pwd
+def getpwd(discordemail, encrypted_pwd):#thanks Capitaine J. Sparrow#0096 for the base code for this system
     kdf = Scrypt(
         salt=SALT,
         length=32,
@@ -206,12 +212,10 @@ def login(discordemail, encrypted_pwd):#thanks Capitaine J. Sparrow#0096 for the
         r=8,
         p=1,
     )
-    DERIVATED_SALT = kdf.derive(str.encode(discordemail))
+    DERIVATED_SALT = kdf.derive(discordemail)
     decryption_suite = AES.new(DERIVATED_SALT, AES.MODE_CBC, SALT)
     plain_text = decryption_suite.decrypt(encrypted_pwd)
-    plain_text = base64.b64decode("utf_8")
-    unhashedpassword=(plain_text[0: len(plain_text)//16]).decode("utf_8")
-    print(unhashedpassword)
+    unhashedpassword=(plain_text[0: len(plain_text)//16])
     return unhashedpassword
 @client.command()
 async def link(ctx):
@@ -224,7 +228,7 @@ async def link(ctx):
     if len(data) > 0:
         cursor = await db.execute("SELECT plexpass FROM creds WHERE discordid = ?", (discordid,))
         data =  await cursor.fetchall()
-        if len(data) > 0:
+        if data is None or len(data)>0:
             await ctx.send("```✔ Your account is already linked.```")
         else: 
             await ctx.send("```❌ You did not finish linking your account. Please run >unlink and then >link again to restart the process.```")
@@ -237,10 +241,11 @@ async def link(ctx):
         #wait until email is available
         cursor = await db.execute("SELECT discordemail FROM creds WHERE discordid = ?", (discordid,))
         data = await cursor.fetchall()
+
         try:
-            while len(data) == 0:
+            while data is None or len(data)==0:
                 db = await aiosqlite.connect("creds.db")
-                cursor = await db.execute(f"SELECT discordemail FROM creds WHERE discordid = ?", (discordid,))
+                cursor = await db.execute("SELECT discordemail FROM creds WHERE discordid = ?", (discordid,))
                 data = await cursor.fetchall()
             else:
                 #got email
@@ -273,7 +278,7 @@ async def link(ctx):
                         r = await run_blocking(blocking_func, username, password, servername,)
                         #now to encrypt passwords
                         db = await aiosqlite.connect("creds.db")
-                        cursor = await db.execute(f"SELECT discordemail FROM creds WHERE discordid = ?", (discordid,))
+                        cursor = await db.execute("SELECT discordemail FROM creds WHERE discordid = ?", (discordid,))
                         data = await cursor.fetchall()
                         discordemail = data[0][0]
                         encryptedpwd = hash(password, discordemail)
@@ -292,18 +297,58 @@ async def link(ctx):
                     await ctx.message.author.send('```❌ Timed out, please run >link again in the server.```')
         except asyncio.TimeoutError: 
             await ctx.send('```❌ Timed out, please run >link again.```')
-@client.command(pass_context = True)#NOT A REAL COMMAND
-async def login(ctx):
-    #JUST BASE TESTING
-    discordemail = "oooga booga"
-    encrypted_pwd = "some super long password"
-    #get encrypted_pwd
-    password = login(discordemail, encrypted_pwd)
-    print(password)
-
 @client.command(pass_context = True)
 async def watch(ctx):
-    await ctx.send("wip")
+    #first check if user is linked
+    discordid = ctx.message.author.id
+    discordid = str(discordid)
+    db = await aiosqlite.connect("creds.db")
+    cursor = await db.execute("SELECT * FROM creds WHERE discordid = ?", (discordid,))   
+    data =  await cursor.fetchall()
+    if len(data) > 0:#if user exists check email
+        cursor = await db.execute("SELECT discordemail FROM creds WHERE discordid = ?", (discordid,))
+        data =  await cursor.fetchone()
+        data = data[0]
+        if data is None:#if user is completely linked start authorize
+            firstmessageembed = discord.Embed(title = "Authorize your account", color= discord.Color.from_rgb(160,131,196), description="🔗 Please click [HERE](http://127.0.0.1:5000/login) to get started.")
+            firstmessageembed.set_author(name = ctx.message.author, icon_url = ctx.author.avatar.url)
+            firstmessageembed.set_footer(text=f'You have 60 seconds to authorize.')
+            await ctx.send(embed = firstmessageembed)
+            #wait until email is available
+            cursor = await db.execute("SELECT discordemail FROM creds WHERE discordid = ?", (discordid,))
+            data = await cursor.fetchone()
+            data = data[0]
+            try:
+                while data is None:
+                    cursor = await db.execute("SELECT discordemail FROM creds WHERE discordid = ?", (discordid,))
+                    data = await cursor.fetchone()
+                    data = data[0]
+                else:
+                    #got email now unecrypt and login to plex
+                    cursor = await db.execute("SELECT discordemail FROM creds WHERE discordid = ?", (discordid,))
+                    data = await cursor.fetchone()
+                    discordemail = data[0]
+                    discordemail = discordemail.encode()
+                    cursor = await db.execute("SELECT plexpass FROM creds WHERE discordid = ?", (discordid,))
+                    data = await cursor.fetchone()
+                    encrypted_pwd = data[0]
+                    password = getpwd(discordemail, encrypted_pwd)
+                    password = password.decode()#got password, check plex while user 
+                    
+            except asyncio.TimeoutError:
+                    await ctx.send('```❌ Timed out, please run >watch again.```')  
+        else:
+            await ctx.send("```❌ You did not finish linking your account. Please run >unlink and then >link again to restart the process.```")        
+    else:
+        await ctx.send("```❌ You are not linked, only users who have linked their Plex and Discord can start a watch together session with the bot. Please run >link to begin the process.```")
+@client.command(pass_context = True)
+async def delete(ctx):
+    discordid = ctx.message.author.id
+    discordid = str(discordid)
+    db = await aiosqlite.connect("creds.db")
+    delete = await db.execute("UPDATE creds SET discordemail=NULL WHERE discordid = ?", (discordid,))
+    commit = await db.commit()
+
 
 threading.Thread(target=web, daemon=True).start()#starts web app
 client.run(CLIENTTOKEN)

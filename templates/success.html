@@ -1,20 +1,23 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Mazi Success</title>
+<title>Authorization Success</title>
 <head>
     <link rel= "stylesheet" type= "text/css" href= "{{ url_for('static',filename='styles.css') }}">
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Work+Sans">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Ubuntu">
+    <link rel="shortcut icon" href="{{ url_for('static', filename='logo.png') }}">
   </head>
 </head>
 <body>
-
 <div class="card">
   <h1>Thank you for authorizing your account.</h1>
   <p>You may now close this page.</p>
   <br>
-  <img src="{{ useravatar }}">
-  <p>{{ username}}#{{ userdis }}</p>
+  <img class="avatar" src="{{ useravatar }}">
+  <p>{{ username }}#{{ userdis }}</p>
+  <br>
+  <br>
+  <img src="{{ url_for('static', filename='logo.png') }}"
   </div>
 </body>
 </html>
