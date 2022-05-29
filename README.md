@@ -1,8 +1,8 @@
 # Mazi
-A discord bot to watch plex with your friends.
+A discord bot to watch plex with your friends easily and through discord.
 
 # As of 5/29/2022 this project has been archived.
-I will eventually pick it up again. But currently the watch together feature (which is the main part of the bot) is so immature, it is impossible to get the data required to work with it. Around 30 or so hours have gone into this and it is really sad to see such a fun project be killed by something like an api. An issue has been made [here](https://github.com/pkkid/python-plexapi/issues/951) if you want to check the status of this project. If the watch together api gets better and is workable, then I will unarchive this project and begin work on it again.
+I will eventually pick it up again. But currently the watch together feature (which is the main part of the bot) is so immature, it is impossible to get the data required to work with it. Around 30 or so hours have gone into this and it is really sad to see such a fun project be killed by something like an api. An issue has been made [here](https://github.com/pkkid/python-plexapi/issues/951) if you want to check the status of this project. If the watch together api gets better and is workable, then I will unarchive this project and begin work on it again. If you would like to take this project up, you may fork it (sorry the code is so cluttered).
 
 # How does this work?
 1. First you connect your plex account with discord and choose which library you would like to share from.
@@ -16,4 +16,3 @@ I will eventually pick it up again. But currently the watch together feature (wh
 - [x] Beautiful
 - [ ] Ease of Use
 - [ ] Fast
-
