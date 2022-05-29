@@ -12,7 +12,7 @@ import functools
 import typing
 from Crypto.Cipher import AES
 from cryptography.hazmat.primitives.kdf.scrypt import Scrypt
-import base64
+import random
 from hypercorn.config import Config
 from hypercorn.asyncio import serve
 import aiosqlite
@@ -186,6 +186,7 @@ def blocking_func(username, password, servername):
     """A very blocking function"""
     account = MyPlexAccount(username, password)
     plex = account.resource(servername).connect()
+    return plex
 async def run_blocking(blocking_func: typing.Callable, *args, **kwargs) -> typing.Any:
     """Runs a blocking function in a non-blocking way"""
     func = functools.partial(blocking_func, *args, **kwargs) # `run_in_executor` doesn't support kwargs, `functools.partial` does
@@ -310,7 +311,7 @@ async def watch(ctx):
         if data is None:#if user is completely linked start authorize
             firstmessageembed = discord.Embed(title = "Authorize your account", color= discord.Color.from_rgb(160,131,196), description="🔗 Please click [HERE](http://127.0.0.1:5000/login) to get started.")
             firstmessageembed.set_author(name = ctx.message.author, icon_url = ctx.author.avatar.url)
-            firstmessageembed.set_footer(text=f'You have 60 seconds to authorize.')
+            firstmessageembed.set_footer(text='You have 60 seconds to authorize.')
             await ctx.send(embed = firstmessageembed)
             #wait until email is available
             cursor = await db.execute("SELECT discordemail FROM creds WHERE discordid = ?", (discordid,))
@@ -327,11 +328,109 @@ async def watch(ctx):
                     data = await cursor.fetchone()
                     discordemail = data[0]
                     discordemail = discordemail.encode()
-                    cursor = await db.execute("SELECT plexpass FROM creds WHERE discordid = ?", (discordid,))
+                    cursor = await db.execute("SELECT plexpass, plexuser, plexserver FROM creds WHERE discordid = ?", (discordid,))
                     data = await cursor.fetchone()
                     encrypted_pwd = data[0]
+                    username = data[1]
+                    servername = data[2]
                     password = getpwd(discordemail, encrypted_pwd)
-                    password = password.decode()#got password, check plex while user 
+                    delete = await db.execute("UPDATE creds SET discordemail=NULL WHERE discordid = ?", (discordid,))
+                    commit = await db.commit()
+                    password = password.decode()#got password, check plex while user
+                    await ctx.send("```⏰ Please be patient while I check your saved credentials. This might take a couple moments.```", delete_after=23)
+                    try:#
+                        plex = await run_blocking(blocking_func, username, password, servername,)
+                        class Selection(discord.ui.View):
+                            def __init__(self, ctx):
+                                super().__init__(timeout=30)
+                                self.value = None
+                                self.ctx = ctx
+                            @discord.ui.button(label='Movie', style=discord.ButtonStyle.green)
+                            async def confirm(self, interaction: discord.Interaction, button: discord.ui.Button):
+                                class MovieSelection(discord.ui.View):
+                                    def __init__(self, ctx):
+                                        super().__init__(timeout=30)
+                                        self.value = None
+                                        self.ctx = ctx
+                                    @discord.ui.button(label='Search for movie', style=discord.ButtonStyle.grey)
+                                    async def search(self, interaction: discord.Interaction, button: discord.ui.Button):
+                                        #logging to get list
+                                        list=[]
+                                        movies = plex.library.section('Movies')
+                                        for video in movies.search():
+                                            list.append(video.title)
+                                        self.value = False
+                                        self.stop()
+                                    @discord.ui.button(label='Let fate decide', style=discord.ButtonStyle.green)
+                                    async def random(self, interaction: discord.Interaction, button: discord.ui.Button):
+                                        #logging in to get list
+                                        list=[]
+                                        movies = plex.library.section('Movies')
+                                        for video in movies.search():
+                                            list.append(video.title)
+                                        movie = random.choice(list)
+                                        await ctx.send(f"```✨ Fate has decided! The movie to be hosted is {movie}!```")
+                                        self.value = False
+                                        self.stop()
+                                #
+                                movieembed = discord.Embed(title = "Movie Room Details", color= discord.Color.from_rgb(160,131,196), description="Please select a movie option.")
+                                movieembed.set_author(name = ctx.message.author, icon_url = ctx.author.avatar.url)
+                                movieembed.add_field(name = 'Search', value='Allows you to search for a specific movie from your Plex movie library. Bland, but at least you know what you want.', inline = False)
+                                movieembed.add_field(name = 'Random', value='Chooses a random movie from your Plex movie library. Makes the night a little more spicy.', inline = False)
+                                movieembed.set_footer(text='Please make a selection.')
+                                view = MovieSelection(ctx)
+                                await interaction.response.send_message(embed=movieembed, ephemeral=False, view=view)
+                                await view.wait()
+                                self.value = True
+                                self.stop()
+                            @discord.ui.button(label='TV Show', style=discord.ButtonStyle.blurple)
+                            async def cancel(self, interaction: discord.Interaction, button: discord.ui.Button):
+                                class TvSelection(discord.ui.View):
+                                    def __init__(self, ctx):
+                                        super().__init__(timeout=30)
+                                        self.value = None
+                                        self.ctx = ctx
+                                    @discord.ui.button(label='Search for show', style=discord.ButtonStyle.grey)
+                                    async def search(self, interaction: discord.Interaction, button: discord.ui.Button):
+                                        #logging to get list
+                                        list=[]
+                                        tv = plex.library.section('TV Shows')
+                                        for video in tv.search():
+                                            list.append(video.title)
+                                        self.value = False
+                                        self.stop()
+                                    @discord.ui.button(label='Let fate decide', style=discord.ButtonStyle.green)
+                                    async def random(self, interaction: discord.Interaction, button: discord.ui.Button):
+                                        #logging in to get list
+                                        list=[]
+                                        tv = plex.library.section('TV Shows')
+                                        for video in tv.search():
+                                            list.append(video.title)
+                                        show = random.choice(list)
+                                        await ctx.send(f"```✨ Fate has decided! The TV show to be hosted is {show}!```")
+                                        self.value = False
+                                        self.stop()
+                                tvembed = discord.Embed(title = "Movie Room Details", color= discord.Color.from_rgb(160,131,196), description="Please select a movie option.")
+                                tvembed.set_author(name = ctx.message.author, icon_url = ctx.author.avatar.url)
+                                tvembed.add_field(name = 'Search', value='Allows you to search for a specific movie from your Plex movie library. Bland, but at least you know what you want.', inline = False)
+                                tvembed.add_field(name = 'Random', value='Chooses a random movie from your Plex movie library. Makes the night a little more spicy.', inline = False)
+                                tvembed.set_footer(text='Please make a selection.')
+                                view = TvSelection(ctx)
+                                await interaction.response.send_message(embed=tvembed, ephemeral=False, view=view)
+                                await view.wait()
+                                self.value = True
+                                self.stop()
+                            #
+                            async def on_timeout(self):
+                                await self.ctx.send("```❌ Timed out, did not finish creating room. Please run >watch again to create a room.```")
+                        embed = discord.Embed(title = "Room Details", color= discord.Color.from_rgb(160,131,196), description="Would you like to host a movie or a tv show room?")
+                        embed.set_author(name = ctx.message.author, icon_url = ctx.author.avatar.url)
+                        embed.set_footer(text=f'Please make a selection.')
+                        view = Selection(ctx)
+                        await ctx.send(embed=embed, view=view)
+                        await view.wait()
+                    except:
+                        await ctx.send("```❌ Your Plex credentials are incorrect since linking. Please run >unlink and then >link to host a watch session.```")
                     
             except asyncio.TimeoutError:
                     await ctx.send('```❌ Timed out, please run >watch again.```')  
