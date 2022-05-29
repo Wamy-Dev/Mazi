@@ -26,8 +26,6 @@ SCOPE = "identify%20email"
 DISCORD_LOGIN = f"https://discord.com/api/oauth2/authorize?client_id={CLIENT_ID}&redirect_uri={REDIRECT_URI}&response_type=code&scope={SCOPE}&prompt=consent"
 DISCORD_TOKEN = "https://discord.com/api/oauth2/token"
 DISCORD_API = "https://discord.com/api"
-KEYSALT = config('KEYSALT')
-KEYPEPPER = config('KEYPEPPER')
 SALT = config('SALT')
 SALT = SALT.encode()
 #init bot
