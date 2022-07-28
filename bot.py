@@ -269,7 +269,7 @@ async def host(ctx):
                                 embed.add_field(name = 'Join Now', value="The room is now open to join! Run >join to join. Make sure you have linked your Plex and Discord accounts.", inline = False)
                                 embed.set_footer(text = "Room joining closes in 10 minutes.")
                                 await ctx.send(embed = embed)
-                                await asyncio.sleep(30)
+                                await asyncio.sleep(600)
                                 #start room
                                 try:
                                     #get users from room
