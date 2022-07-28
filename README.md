@@ -13,7 +13,7 @@ A discord bot to watch plex with your friends easily and through discord. The fi
 Here you can link your accounts so you can use the Mazi Bot. Accounts are required to use the Mazi bot. You may get an alert from Plex when linking about a "security alert", and it will show the server IP, this will be fixed eventually, but do not worry about it.
 
 # How does this work?
-1. First your connect your sign up for an account at [Mazi.pw](https://mazi.pw/user).
+1. First sign up for an account at [Mazi.pw](https://mazi.pw/user).
 2. Link both your Discord and Plex accounts to it. If you are hosting Watch Together Sessions, make sure to add your public server url. This can be an ip or a url to your server. Make sure it is valid before submitting!
 3. If you are hosting, use `>host` to begin a session. It will make a session, and will wait 10 minutes for people to join the room. If you are joining, use `>join` to join a joinable room. Make sure you are in the same channel as where the room was started.
 4. After the 10 minutes has passed, the room will close and the movie will begin. All users who have joined need to now open up Plex on any device, and join the Watch Together session.
