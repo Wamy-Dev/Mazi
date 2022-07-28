@@ -347,10 +347,14 @@ async def join(ctx):
                 #get all showings in channel
                 try:
                     docs = db.collection(u'rooms').where(u'Channel', u'==', channel).stream()
+                    norooms = True
                     for rooms in docs:
+                        norooms = False
                         roomname = rooms.id
+                    if norooms:
+                        await ctx.send("```❌ There are no open rooms to join!```")
                 except:
-                    await ctx.send("Room has closed joining already!")
+                    await ctx.send("```❌ There are no open rooms to join!```")
                 #get user information
                 doc = db.collection(u'users').where(u'discordid', u'==', discordid).stream()
                 for doc in docs:
