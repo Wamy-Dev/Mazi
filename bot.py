@@ -105,6 +105,7 @@ async def movies(ctx):
         docs = db.collection(u'users').where(u'discordid', u'==', discordid).stream()
         empty = True
         for doc in docs:
+            empty = False
             data = doc.to_dict()
             try:
                 discordstatus = data["discord"]
