@@ -6,9 +6,9 @@ A discord bot to watch plex with your friends easily and through discord.
   <img src="/assets/mazilogolight.png#gh-dark-mode-only" height="200">
 </div>
 
-# As of 5/29/2022 this project has been archived.
-I will eventually pick it up again. But currently the watch together feature (which is the main part of the bot) is so immature, it is impossible to get the data required to work with it. Around 30 or so hours have gone into this and it is really sad to see such a fun project be killed by something like an api. An issue has been made [here](https://github.com/pkkid/python-plexapi/issues/951) if you want to check the status of this project. If the watch together api gets better and is workable, then I will unarchive this project and begin work on it again. If you would like to take this project up, you may fork it (sorry the code is so cluttered).
-# Website = ~~[Mazi.pw](https://mazi.pw)~~ (Not available yet!)
+# Website = [Mazi.pw](https://mazi.pw)
+
+Here you can link your accounts so you can use the Mazi Bot. Accounts are required to use the Mazi bot. You may get an alert from Plex when linking about a "security alert", and it will show the server IP, this will be fixed eventually, but do not worry about it.
 
 # How does this work?
 1. First you connect your plex account with discord and choose which library you would like to share from.
@@ -17,15 +17,15 @@ I will eventually pick it up again. But currently the watch together feature (wh
 4. The bot then waits 10 minutes for everyone to join and lists how many users are in currently. 
 5. Then after the 10 minutes, the movie or show automatically starts and then the user who owns the media can choose the controls.
 
-# Features (WIP)
+# Features
 - [x] Easy Plex and Discord Linking
 - [x] Beautiful
-- [ ] Ease of Use
-- [ ] Fast
+- [X] Ease of Use
+- [X] Fast
 
 #
 
 ##### This was made by me, Wamy.
-##### If you want to contact me: [My personal contact page](https://homeonacloud.com/pages/contactme.html)
-##### If you want to donate to show your thanks: [My personal donation page](https://homeonacloud.com/pages/donate.html)
+##### If you want to contact me: [My personal contact page](https://homeonacloud.com/contact)
+##### If you want to donate to show your thanks: [My personal donation page](https://homeonacloud.com/donate)
 ##### This project was made with community in mind, please be nice and don't steal my work.
