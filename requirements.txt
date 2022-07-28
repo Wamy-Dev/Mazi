@@ -1,0 +1,6 @@
+git+https://github.com/Rapptz/discord.py
+meilisearch
+asyncio
+python-decouple
+quart
+firebase-admin

@@ -1,451 +1,394 @@
-from pydoc import plain
+#    ______               __  __            __                  
+#   / ____/___ _____ _   / / / /_  ______  / /____  ___________ 
+#  / __/ / __ `/ __ `/  / /_/ / / / / __ \/ __/ _ \/ ___/ ___(_)
+# / /___/ /_/ / /_/ /  / __  / /_/ / / / / /_/  __/ /  (__  )   
+#/_____/\__, /\__, /  /_/ /_/\__,_/_/ /_/\__/\___/_/  /____(_)  
+#      /____//____/                                             
+# 
 import discord
 from discord.ext import commands
+from quart import Quart
 from decouple import config
-import sqlite3
-from quart import Quart, request, redirect, render_template
-import requests
-import threading
+import firebase_admin
+from firebase_admin import credentials
+from firebase_admin import firestore
 import asyncio
-from plexapi.myplex import MyPlexAccount
-import functools
-import typing
-from Crypto.Cipher import AES
-from cryptography.hazmat.primitives.kdf.scrypt import Scrypt
+from threading import Thread
+from plexapi.server import PlexServer
+from base64 import b64decode
+from nacl.secret import SecretBox
 import random
-from hypercorn.config import Config
-from hypercorn.asyncio import serve
-import aiosqlite
-from waitress import serve
-#import logging
-#logging.basicConfig(level=logging.DEBUG)
-CLIENT_ID = '978163786886311977'
-CLIENT_SECRET = config('CLIENT_SECRET')
-REDIRECT_URI = "http://127.0.0.1:5000/success"
-SCOPE = "identify%20email"
-DISCORD_LOGIN = f"https://discord.com/api/oauth2/authorize?client_id={CLIENT_ID}&redirect_uri={REDIRECT_URI}&response_type=code&scope={SCOPE}&prompt=consent"
-DISCORD_TOKEN = "https://discord.com/api/oauth2/token"
-DISCORD_API = "https://discord.com/api"
-SALT = config('SALT')
-SALT = SALT.encode()
-#init bot
-CLIENTTOKEN = config('CLIENTTOKEN')
-class Bot(commands.Bot):
-    def __init__(self):
-        intents = discord.Intents.default()
-        intents.message_content = True
-        super().__init__(command_prefix=commands.when_mentioned_or('>'), intents=intents)
-    async def on_ready(self):
-        print(f'Logged in as {self.user} (ID: {self.user.id})')
-        print('------')
-client = Bot()
-#all quart
+import requests
+#quart
 app = Quart(__name__)
 @app.route("/", methods = ["get"])
 async def index():
-    return await render_template('index.html')
-@app.errorhandler(404)
-async def page_not_found(e):
-    return await render_template('error.html'), 404
-@app.errorhandler(500)
-async def servererror(e):
-    return await render_template('error.html'), 500
-@app.route("/login", methods = ["get"])
-def login():
-    return redirect(DISCORD_LOGIN)
-@app.route("/success", methods = ["get"])
-async def success():
-    code = request.args.get("code")
-    useraccesstoken = getaccesstoken(code)
-    userdata = getuserdata(useraccesstoken)
-    useremail = userdata.get("email")
-    userid = userdata.get("id")
-    userid = str(userid)
-    useravatar = userdata.get("avatar")
-    username = userdata.get("username")
-    userdis = userdata.get("discriminator")
-    useravatar = (f"https://cdn.discordapp.com/avatars/{userid}/"+useravatar+".png")
-    db = await aiosqlite.connect("creds.db")
-    #check if creds already exists
-    cursor = await db.execute("SELECT * FROM creds WHERE discordid = ?", (userid,))
-    data = await cursor.fetchall()
-    if len(data) > 0:
-        cursor = await db.execute("UPDATE creds SET discordemail= ? WHERE discordid = ?", (useremail, userid,))
-        await db.commit()
-    else:
-        cursor = await db.execute("INSERT INTO creds(discordid, discordemail) VALUES(?, ?)", (userid, useremail,))
-        await db.commit()
-    await cursor.close()
-    await db.close()
-    return await render_template('success.html', useravatar = useravatar, username = username, userdis = userdis)
-def getaccesstoken(code):
-    payload = {
-       "client_id": CLIENT_ID,
-       "client_secret": CLIENT_SECRET,
-       "grant_type": "authorization_code",
-       "code": code,
-       "redirect_uri": REDIRECT_URI,
-       "scope": SCOPE
-    }
-    headers = {
-        "Content-Type": "application/x-www-form-urlencoded"
-    }
-    accesstoken = requests.post(url = DISCORD_TOKEN, data = payload, headers = headers)
-    json = accesstoken.json()
-    return json.get("access_token")
-def getuserdata(useraccesstoken):
-    url = DISCORD_API+"/users/@me"
-    headers = {
-        "Authorization": f"Bearer {useraccesstoken}"
-    }
-    userdata = requests.get(url = url, headers = headers)
-    userjson = userdata.json()
-    return userjson
-app.register_error_handler(404, page_not_found)
-app.register_error_handler(500, servererror)
-def web():
-    app.run()
-#makes db if it does not exist
-try: 
-    connection = sqlite3.connect("creds.db")
-    cursor = connection.cursor()
-    cursor.execute("CREATE TABLE creds (discordid TEXT, discordemail TEXT, plexuser TEXT, plexpass TEXT, plexserver TEXT)")
-    print("Created new table.")
-except:
-    print("Table already present.")
-#basic commands
+    return '<h3><center>Mazi bot is up! ✔</center></h3>', 200
+#firebase
+cred = credentials.Certificate("./creds.json")
+firebase_admin.initialize_app(cred)
+db = firestore.client()
+#counts
+doc = db.collection(u'counts').document(u'counts')
+#discord
+CLIENTTOKEN = config('CLIENTTOKEN')
+intents = discord.Intents.default()
+intents.message_content = True
+client = commands.Bot(command_prefix = '>', intents=intents)
 client.remove_command('help')
 @client.event
 async def on_ready():
-    print(f'Bot is ready. Logged in as {client.user}(ID: {client.user.id}) ')
-    await client.change_presence(activity = discord.Activity(type = discord.ActivityType.watching, name = ">help"))
+    print(f'Bot is ready. Logged in as {client.user}(ID: {client.user.id})')
+    await client.change_presence(activity = discord.Activity(type = discord.ActivityType.watching, name = ">help"))#sets status as "Watching:!help"
 @client.command()
 async def eggotyou(ctx):
     await ctx.send('Fine. You got me... screenshot this and send it to me on my discord to have your name put in the source code!', delete_after=5)
     await ctx.message.delete()
 @client.command()
 async def project(ctx):
-    await ctx.send('```https://github.com/Wamy-Dev/Mazi```')
+    embed = discord.Embed(title = "Mazi Github", colour = discord.Colour.from_rgb(229,160,13))
+    embed.set_author(name = ctx.message.author, icon_url = ctx.author.avatar.url)
+    embed.add_field(name = '🔗', value='https://github.com/Wamy-Dev/Mazi', inline = False)
+    embed.set_footer(text = "If you like this project please donate using >donate.")
+    await ctx.send(embed = embed)
+@client.command()
+async def website(ctx):
+    embed = discord.Embed(title = "Mazi Website", colour = discord.Colour.from_rgb(229,160,13))
+    embed.set_author(name = ctx.message.author, icon_url = ctx.author.avatar.url)
+    embed.add_field(name = '🔗', value='https://mazi.pw', inline = False)
+    embed.set_footer(text = "If you like this project please donate using >donate.")
+    await ctx.send(embed = embed)
 @client.command()
 async def donate(ctx):
-    await ctx.send('```https://homeonacloud.com/pages/donate```')
+    embed = discord.Embed(title = "Donate to the project", colour = discord.Colour.from_rgb(229,160,13))
+    embed.set_author(name = ctx.message.author, icon_url = ctx.author.avatar.url)
+    embed.add_field(name = '🔗', value='https://homeonacloud.com/donate', inline = False)
+    embed.set_footer(text = "If you like this project please donate using >donate.")
+    await ctx.send(embed = embed)
 @client.command()
 async def ping(ctx):
-    await ctx.send(f'```I`m not too slow... right? {round(client.latency * 1000)}ms```')
-@client.command(pass_context = True, aliases = ['Help', "h"])
+    txt = str(f"""```css\nIm not too slow right? {round(client.latency * 1000)}ms.```""")
+    await ctx.send(txt)
+@client.command()
+async def counts(ctx):
+    counts = doc.get()
+    previouscount = counts.to_dict()
+    txt = str(f"""```css\nThe bot has hosted movie night {str(previouscount["counts"])} times.```""")
+    await ctx.send(txt)
+@client.command(pass_context = True, aliases = ['Help'])
 async def help(ctx):
-    embed = discord.Embed(title = "Here is a command list:", color= discord.Color.from_rgb(160,131,196))
+    embed = discord.Embed(title = "Here is a command list:", colour= discord.Colour.from_rgb(229,160,13))
     embed.set_author(name = ctx.message.author, icon_url = ctx.author.avatar.url)
+    embed.add_field(name = '>host', value='Start a movie session.', inline = False)
+    embed.add_field(name = '>join', value='If there is an active session, join it.', inline = False)
+    embed.add_field(name = '>link', value='Link your account to plex.', inline = False)
     embed.add_field(name = '>ping', value='Shows the ping between the bot and the user.', inline = False)
-    embed.add_field(name = '>project', value='View the project github.', inline = False)
+    embed.add_field(name = '>project', value='View the project Github.', inline = False)
+    embed.add_field(name = '>website', value='View the Mazi website.', inline = False)
     embed.add_field(name = '>donate', value='Donate to the project.', inline = False)
-    embed.add_field(name = '>counts', value='See how much media has been shared using this bot.', inline = False)
-    embed.add_field(name = '>link', value='Link your Plex and Discord accounts to share with your friends. Not required unless you host the session.', inline = False)
-    embed.add_field(name = '>unlink', value='Unlink your Plex and Discord accounts.', inline = False)
-    embed.add_field(name = '>watch', value='Start a Plex Watch Togther session.', inline = False)
+    embed.add_field(name = '>counts', value='See how many times the bot has hosted a movie night globally.', inline = False)
     await ctx.send(embed = embed)
-@client.command(pass_context = True)
-#unlink
-async def unlink(ctx):
-    discordid = ctx.message.author.id
-    db = await aiosqlite.connect("creds.db")
-    cursor = await db.execute("SELECT * FROM creds WHERE discordid = ?", (discordid,))
-    data = await cursor.fetchall()
-    if len(data) > 0:
-        class Confirm(discord.ui.View):
-            def __init__(self, ctx):
-                super().__init__(timeout=30)
-                self.value = None
-                self.ctx = ctx
-            @discord.ui.button(label='Confirm', style=discord.ButtonStyle.red)
-            async def confirm(self, interaction: discord.Interaction, button: discord.ui.Button):
-                cursor = await db.execute("DELETE FROM creds WHERE discordid = ?", (discordid,))
-                await db.commit()
-                await cursor.close()
-                await db.close()
-                await interaction.response.send_message("```🖐 Unlinked account. If you would like to relink in the future, run >link again.```", ephemeral=False)
-                self.value = True
-                self.stop()
-            @discord.ui.button(label='Cancel', style=discord.ButtonStyle.grey)
-            async def cancel(self, interaction: discord.Interaction, button: discord.ui.Button):
-                await interaction.response.send_message("```❌ Aborted by user. Did not delete link.```", ephemeral=False)
-                self.value = False
-                self.stop()
-            async def on_timeout(self):
-                await self.ctx.send("```❌ Timed out, did not delete link. If you meant to delete link, please run >unlink again and click confirm.```")
-        embed = discord.Embed(title = "Click confirm to delete link", color= discord.Color.from_rgb(160,131,196), description="⚠ Are you sure you want to unlink your account? If not, please click the cancel button.")
-        embed.set_author(name = ctx.message.author, icon_url = ctx.author.avatar.url)
-        embed.set_footer(text=f'If you want to relink in the future, run >link again.')
-        view = Confirm(ctx)
-        await ctx.send(embed=embed, view=view)
-        await view.wait()
-    else:
-        await ctx.send("```❌ You don't have an account linked to unlink...```")
-#link
-def blocking_func(username, password, servername):
-    """A very blocking function"""
-    account = MyPlexAccount(username, password)
-    plex = account.resource(servername).connect()
-    return plex
-async def run_blocking(blocking_func: typing.Callable, *args, **kwargs) -> typing.Any:
-    """Runs a blocking function in a non-blocking way"""
-    func = functools.partial(blocking_func, *args, **kwargs) # `run_in_executor` doesn't support kwargs, `functools.partial` does
-    return await client.loop.run_in_executor(None, func)
-def hash(password, discordemail):#thanks Capitaine J. Sparrow#0096 for the base code for this system
-    kdf = Scrypt(
-        salt=SALT,
-        length=32,
-        n=2**14,
-        r=8,
-        p=1,
-    )
-    DERIVATED_SALT = kdf.derive(str.encode(discordemail))
-    encryption_suite = AES.new(DERIVATED_SALT, AES.MODE_CBC, SALT)
-    encrypted_pwd = encryption_suite.encrypt(password.encode() * 16)
-    return encrypted_pwd
-def getpwd(discordemail, encrypted_pwd):#thanks Capitaine J. Sparrow#0096 for the base code for this system
-    kdf = Scrypt(
-        salt=SALT,
-        length=32,
-        n=2**14,
-        r=8,
-        p=1,
-    )
-    DERIVATED_SALT = kdf.derive(discordemail)
-    decryption_suite = AES.new(DERIVATED_SALT, AES.MODE_CBC, SALT)
-    plain_text = decryption_suite.decrypt(encrypted_pwd)
-    unhashedpassword=(plain_text[0: len(plain_text)//16])
-    return unhashedpassword
 @client.command()
 async def link(ctx):
-    #checks if user is linked first
+    embed = discord.Embed(title = "Start linking accounts", colour = discord.Colour.from_rgb(229,160,13))
+    embed.set_author(name = ctx.message.author, icon_url = ctx.author.avatar.url)
+    embed.add_field(name = '🔗', value='https://mazi.pw/user', inline = False)
+    embed.set_footer(text = "If you like this project please donate using >donate.")
+    await ctx.send(embed = embed)
+#big boy commands
+@client.command()
+async def movies(ctx):
     discordid = ctx.message.author.id
     discordid = str(discordid)
-    db = await aiosqlite.connect("creds.db")
-    cursor = await db.execute("SELECT * FROM creds WHERE discordid = ?", (discordid,))   
-    data =  await cursor.fetchall()
-    if len(data) > 0:
-        cursor = await db.execute("SELECT plexpass FROM creds WHERE discordid = ?", (discordid,))
-        data =  await cursor.fetchall()
-        if data is None or len(data)>0:
-            await ctx.send("```✔ Your account is already linked.```")
-        else: 
-            await ctx.send("```❌ You did not finish linking your account. Please run >unlink and then >link again to restart the process.```")
-    else:#FUTURE FEATURE: MAKE A TIMEOUT FOR IF USER DID NOT CLICK LINK, IVE TRIED SO HARD ON THIS AND HAVE FOUND NO SOLUTION
-        #make user click oauth2 link to recieve email
-        firstmessageembed = discord.Embed(title = "Authorize your account", color= discord.Color.from_rgb(160,131,196), description="🔗 Please click [HERE](http://127.0.0.1:5000/login) to get started.")
-        firstmessageembed.set_author(name = ctx.message.author, icon_url = ctx.author.avatar.url)
-        firstmessageembed.set_footer(text=f'You have 60 seconds to authorize.')
-        await ctx.send(embed = firstmessageembed)
-        #wait until email is available
-        cursor = await db.execute("SELECT discordemail FROM creds WHERE discordid = ?", (discordid,))
-        data = await cursor.fetchall()
-
-        try:
-            while data is None or len(data)==0:
-                db = await aiosqlite.connect("creds.db")
-                cursor = await db.execute("SELECT discordemail FROM creds WHERE discordid = ?", (discordid,))
-                data = await cursor.fetchall()
-            else:
-                #got email
-                messageembed = discord.Embed(title = "Link your Plex and your Discord", color= discord.Color.from_rgb(160,131,196), description="🔗 Thank you for authorizing. Please check your pm's to link your accounts.")
-                messageembed.set_author(name = ctx.message.author, icon_url = ctx.author.avatar.url)
-                messageembed.set_footer(text=f'This method is temporary and will be fixed in the future. Only send sensitive data to Mazi#2364. ♥')
-                await ctx.send(embed = messageembed)
-                userdmembed = discord.Embed(title = "🤝 Please enter your Plex username", color= discord.Color.from_rgb(160,131,196), description="⚠ Please read [here](https://github.com/Wamy-Dev/Mazi) about Mazi data safety. Your data is secure and encrypted with [128bit AES](https://en.wikipedia.org/wiki/Advanced_Encryption_Standard). Only respond with your credentials if <@!978163786886311977> sent you this message, otherwise please ignore it.")
-                userdmembed.set_author(name = ctx.message.author, icon_url = ctx.author.avatar.url)
-                userdmembed.set_footer(text=f'This method is temporary and will be fixed in the future.')
-                await ctx.message.author.send(embed = userdmembed)
-                try:#in try because we want a timeout
-                    dmpassembed = discord.Embed(title = "🤝 Please enter your Plex password.", color= discord.Color.from_rgb(160,131,196), description="⚠ Please read [here](https://github.com/Wamy-Dev/Mazi) about Mazi data safety. Your data is secure and encrypted with [128bit AES](https://en.wikipedia.org/wiki/Advanced_Encryption_Standard). Only respond with your credentials if <@!978163786886311977> sent you this message, otherwise please ignore it.")
-                    dmpassembed.set_author(name = ctx.message.author, icon_url = ctx.author.avatar.url)
-                    dmpassembed.set_footer(text=f'This method is temporary and will be fixed in the future.')
-                    dmserverembed = discord.Embed(title = "🤝 Please enter your Plex servername", color= discord.Color.from_rgb(160,131,196), description="⚠ Please read [here](https://github.com/Wamy-Dev/Mazi) about Mazi data safety. Your data is secure and encrypted with [128bit AES](https://en.wikipedia.org/wiki/Advanced_Encryption_Standard). Only respond with your credentials if <@!978163786886311977> sent you this message, otherwise please ignore it.")
-                    dmserverembed.set_author(name = ctx.message.author, icon_url = ctx.author.avatar.url)
-                    dmserverembed.set_footer(text=f'This method is temporary and will be fixed in the future.')
-                    member = ctx.message.author
-                    username = await client.wait_for('message', check = lambda x: x.channel == member.dm_channel and x.author == member, timeout=30)
-                    username = username.content
-                    await ctx.message.author.send(embed = dmpassembed)
-                    password = await client.wait_for('message', check = lambda x: x.channel == member.dm_channel and x.author == member, timeout=30)
-                    password = password.content
-                    await ctx.message.author.send(embed = dmserverembed) 
-                    servername = await client.wait_for('message', check = lambda x: x.channel == member.dm_channel and x.author == member, timeout=30)
-                    servername = servername.content
-                    await ctx.message.author.send('```⏰ Please be patient while I check your credentials. This might take a couple moments.```')
+    #get data
+    try:
+        docs = db.collection(u'users').where(u'discordid', u'==', discordid).stream()
+        if doc.exists:
+            for doc in docs:
+                data = doc.to_dict()
+                try:
+                    discordstatus = data["discord"]
+                    plexstatus = data["plex"]
+                    serverurl = data["plexserverurl"]
+                    if len(serverurl)>0:
+                        serverurl = True
+                except:
+                    embed = discord.Embed(title = "You haven't provided all information!", colour = discord.Colour.from_rgb(229,160,13))
+                    embed.set_author(name = ctx.message.author, icon_url = ctx.author.avatar.url)
+                    embed.add_field(name = 'Link accounts', value='https://mazi.pw/user', inline = False)
+                    embed.set_footer(text = "If you want to host you need all information.")
+                    await ctx.send(embed = embed)
+                    break
+                if plexstatus & discordstatus & serverurl:
                     try:
-                        r = await run_blocking(blocking_func, username, password, servername,)
-                        #now to encrypt passwords
-                        db = await aiosqlite.connect("creds.db")
-                        cursor = await db.execute("SELECT discordemail FROM creds WHERE discordid = ?", (discordid,))
-                        data = await cursor.fetchall()
-                        discordemail = data[0][0]
-                        encryptedpwd = hash(password, discordemail)
-                        password = "NULL"#wiping from mem
-                        discordemail = "NULL"#wiping from mem
-                        try:  
-                            delete = await db.execute("UPDATE creds SET discordemail=NULL WHERE discordid = ?", (discordid,))
-                            commit = await db.commit()
-                            insert = await db.execute("UPDATE creds SET plexuser=?, plexpass=?, plexserver=? WHERE discordid = ?", (username, encryptedpwd, servername, discordid,))
-                            commit = await db.commit()
-                        except Exception as e: print(e)
-                        await ctx.message.author.send('```✔ Encrypted and saved your credentials. You are now able to host watch together sessions.```')
-                    except:
-                        await ctx.message.author.send('```❌ Your credentials are incorrect. Please try again.```')
-                except asyncio.TimeoutError:
-                    await ctx.message.author.send('```❌ Timed out, please run >link again in the server.```')
-        except asyncio.TimeoutError: 
-            await ctx.send('```❌ Timed out, please run >link again.```')
-@client.command(pass_context = True)
-async def watch(ctx):
-    #first check if user is linked
-    discordid = ctx.message.author.id
-    discordid = str(discordid)
-    db = await aiosqlite.connect("creds.db")
-    cursor = await db.execute("SELECT * FROM creds WHERE discordid = ?", (discordid,))   
-    data =  await cursor.fetchall()
-    if len(data) > 0:#if user exists check email
-        cursor = await db.execute("SELECT discordemail FROM creds WHERE discordid = ?", (discordid,))
-        data =  await cursor.fetchone()
-        data = data[0]
-        if data is None:#if user is completely linked start authorize
-            firstmessageembed = discord.Embed(title = "Authorize your account", color= discord.Color.from_rgb(160,131,196), description="🔗 Please click [HERE](http://127.0.0.1:5000/login) to get started.")
-            firstmessageembed.set_author(name = ctx.message.author, icon_url = ctx.author.avatar.url)
-            firstmessageembed.set_footer(text='You have 60 seconds to authorize.')
-            await ctx.send(embed = firstmessageembed)
-            #wait until email is available
-            cursor = await db.execute("SELECT discordemail FROM creds WHERE discordid = ?", (discordid,))
-            data = await cursor.fetchone()
-            data = data[0]
-            try:
-                while data is None:
-                    cursor = await db.execute("SELECT discordemail FROM creds WHERE discordid = ?", (discordid,))
-                    data = await cursor.fetchone()
-                    data = data[0]
-                else:
-                    #got email now unecrypt and login to plex
-                    cursor = await db.execute("SELECT discordemail FROM creds WHERE discordid = ?", (discordid,))
-                    data = await cursor.fetchone()
-                    discordemail = data[0]
-                    discordemail = discordemail.encode()
-                    cursor = await db.execute("SELECT plexpass, plexuser, plexserver FROM creds WHERE discordid = ?", (discordid,))
-                    data = await cursor.fetchone()
-                    encrypted_pwd = data[0]
-                    username = data[1]
-                    servername = data[2]
-                    password = getpwd(discordemail, encrypted_pwd)
-                    delete = await db.execute("UPDATE creds SET discordemail=NULL WHERE discordid = ?", (discordid,))
-                    commit = await db.commit()
-                    password = password.decode()#got password, check plex while user
-                    await ctx.send("```⏰ Please be patient while I check your saved credentials. This might take a couple moments.```", delete_after=23)
-                    try:#
-                        plex = await run_blocking(blocking_func, username, password, servername,)
-                        class Selection(discord.ui.View):
-                            def __init__(self, ctx):
-                                super().__init__(timeout=30)
-                                self.value = None
-                                self.ctx = ctx
-                            @discord.ui.button(label='Movie', style=discord.ButtonStyle.green)
-                            async def confirm(self, interaction: discord.Interaction, button: discord.ui.Button):
-                                class MovieSelection(discord.ui.View):
-                                    def __init__(self, ctx):
-                                        super().__init__(timeout=30)
-                                        self.value = None
-                                        self.ctx = ctx
-                                    @discord.ui.button(label='Search for movie', style=discord.ButtonStyle.grey)
-                                    async def search(self, interaction: discord.Interaction, button: discord.ui.Button):
-                                        #logging to get list
-                                        list=[]
-                                        movies = plex.library.section('Movies')
-                                        for video in movies.search():
-                                            list.append(video.title)
-                                        self.value = False
-                                        self.stop()
-                                    @discord.ui.button(label='Let fate decide', style=discord.ButtonStyle.green)
-                                    async def random(self, interaction: discord.Interaction, button: discord.ui.Button):
-                                        #logging in to get list
-                                        list=[]
-                                        movies = plex.library.section('Movies')
-                                        for video in movies.search():
-                                            list.append(video.title)
-                                        movie = random.choice(list)
-                                        await ctx.send(f"```✨ Fate has decided! The movie to be hosted is {movie}!```")
-                                        self.value = False
-                                        self.stop()
-                                #
-                                movieembed = discord.Embed(title = "Movie Room Details", color= discord.Color.from_rgb(160,131,196), description="Please select a movie option.")
-                                movieembed.set_author(name = ctx.message.author, icon_url = ctx.author.avatar.url)
-                                movieembed.add_field(name = 'Search', value='Allows you to search for a specific movie from your Plex movie library. Bland, but at least you know what you want.', inline = False)
-                                movieembed.add_field(name = 'Random', value='Chooses a random movie from your Plex movie library. Makes the night a little more spicy.', inline = False)
-                                movieembed.set_footer(text='Please make a selection.')
-                                view = MovieSelection(ctx)
-                                await interaction.response.send_message(embed=movieembed, ephemeral=False, view=view)
-                                await view.wait()
-                                self.value = True
-                                self.stop()
-                            @discord.ui.button(label='TV Show', style=discord.ButtonStyle.blurple)
-                            async def cancel(self, interaction: discord.Interaction, button: discord.ui.Button):
-                                class TvSelection(discord.ui.View):
-                                    def __init__(self, ctx):
-                                        super().__init__(timeout=30)
-                                        self.value = None
-                                        self.ctx = ctx
-                                    @discord.ui.button(label='Search for show', style=discord.ButtonStyle.grey)
-                                    async def search(self, interaction: discord.Interaction, button: discord.ui.Button):
-                                        #logging to get list
-                                        list=[]
-                                        tv = plex.library.section('TV Shows')
-                                        for video in tv.search():
-                                            list.append(video.title)
-                                        self.value = False
-                                        self.stop()
-                                    @discord.ui.button(label='Let fate decide', style=discord.ButtonStyle.green)
-                                    async def random(self, interaction: discord.Interaction, button: discord.ui.Button):
-                                        #logging in to get list
-                                        list=[]
-                                        tv = plex.library.section('TV Shows')
-                                        for video in tv.search():
-                                            list.append(video.title)
-                                        show = random.choice(list)
-                                        await ctx.send(f"```✨ Fate has decided! The TV show to be hosted is {show}!```")
-                                        self.value = False
-                                        self.stop()
-                                tvembed = discord.Embed(title = "Movie Room Details", color= discord.Color.from_rgb(160,131,196), description="Please select a movie option.")
-                                tvembed.set_author(name = ctx.message.author, icon_url = ctx.author.avatar.url)
-                                tvembed.add_field(name = 'Search', value='Allows you to search for a specific movie from your Plex movie library. Bland, but at least you know what you want.', inline = False)
-                                tvembed.add_field(name = 'Random', value='Chooses a random movie from your Plex movie library. Makes the night a little more spicy.', inline = False)
-                                tvembed.set_footer(text='Please make a selection.')
-                                view = TvSelection(ctx)
-                                await interaction.response.send_message(embed=tvembed, ephemeral=False, view=view)
-                                await view.wait()
-                                self.value = True
-                                self.stop()
-                            #
-                            async def on_timeout(self):
-                                await self.ctx.send("```❌ Timed out, did not finish creating room. Please run >watch again to create a room.```")
-                        embed = discord.Embed(title = "Room Details", color= discord.Color.from_rgb(160,131,196), description="Would you like to host a movie or a tv show room?")
-                        embed.set_author(name = ctx.message.author, icon_url = ctx.author.avatar.url)
-                        embed.set_footer(text=f'Please make a selection.')
-                        view = Selection(ctx)
-                        await ctx.send(embed=embed, view=view)
-                        await view.wait()
-                    except:
-                        await ctx.send("```❌ Your Plex credentials are incorrect since linking. Please run >unlink and then >link to host a watch session.```")
-                    
-            except asyncio.TimeoutError:
-                    await ctx.send('```❌ Timed out, please run >watch again.```')  
+                        moviefields = []
+                        for movie in getMovies(data):
+                            moviefields.append(movie)
+                        movies = ""
+                        for items in moviefields:
+                            movies += f"{items}\n"
+                        #math
+                        if len(moviefields) == 0:
+                            await ctx.send("```❌No movies in Plex Movie library.```")
+                        if len(moviefields) > 0:
+                            embed = discord.Embed(title = "Available Plex Movies", description=movies, colour = discord.Colour.from_rgb(229,160,13))
+                            embed.set_author(name = ctx.message.author, icon_url = ctx.author.avatar.url)
+                            embed.set_footer(text = f"{ctx.message.author}'s movies")
+                            await ctx.send(embed = embed)
+                        if len(movies) > 4096:
+                            await ctx.send("```❌ You have too many movies to display.```")
+                    except Exception as e:
+                        print(e)
+                        await ctx.send("```❌ Your Plex Server is not accessible!```")
         else:
-            await ctx.send("```❌ You did not finish linking your account. Please run >unlink and then >link again to restart the process.```")        
-    else:
-        await ctx.send("```❌ You are not linked, only users who have linked their Plex and Discord can start a watch together session with the bot. Please run >link to begin the process.```")
-@client.command(pass_context = True)
-async def delete(ctx):
+            embed = discord.Embed(title = "No account found!", colour = discord.Colour.from_rgb(229,160,13))
+            embed.set_author(name = ctx.message.author, icon_url = ctx.author.avatar.url)
+            embed.add_field(name = 'Create an account', value='https://mazi.pw/user', inline = False)
+            embed.set_footer(text = "If you like this project please donate using >donate.")
+            await ctx.send(embed = embed)
+    except: 
+        embed = discord.Embed(title = "No account found!", colour = discord.Colour.from_rgb(229,160,13))
+        embed.set_author(name = ctx.message.author, icon_url = ctx.author.avatar.url)
+        embed.add_field(name = 'Create an account', value='https://mazi.pw/user', inline = False)
+        embed.set_footer(text = "If you like this project please donate using >donate.")
+        await ctx.send(embed = embed)
+def getMovies(data):
+    #first login
+    try:
+        #convert from aes
+        encrypted = data["plexauth"]
+        secret_key = config('AESKEY')
+        encrypted = encrypted.split(':')
+        nonce = b64decode(encrypted[0])
+        encrypted = b64decode(encrypted[1])
+        box = SecretBox(bytes(secret_key, encoding='utf8'))
+        plexauth = box.decrypt(encrypted, nonce).decode('utf-8')
+        plex = PlexServer(data["plexserverurl"], plexauth)
+        movies = plex.library.section('Movies')
+    except Exception as e:
+        print(e)
+    list = []
+    for video in movies.search():
+        list.append(video.title)
+        return(list)
+@client.command()
+async def host(ctx):
     discordid = ctx.message.author.id
     discordid = str(discordid)
-    db = await aiosqlite.connect("creds.db")
-    delete = await db.execute("UPDATE creds SET discordemail=NULL WHERE discordid = ?", (discordid,))
-    commit = await db.commit()
-
-
-threading.Thread(target=web, daemon=True).start()#starts web app
+    def check(msg):
+        return msg.author == ctx.author and msg.channel == ctx.channel
+    #get data
+    try:
+        docs = db.collection(u'users').where(u'discordid', u'==', discordid).stream()
+        if doc.exists:
+            for doc in docs:
+                data = doc.to_dict()
+                try:
+                    discordstatus = data["discord"]
+                    plexstatus = data["plex"]
+                    serverurl = data["plexserverurl"]
+                    if len(serverurl)>0:
+                        serverurl = True
+                except:
+                    embed = discord.Embed(title = "You haven't provided all information!", colour = discord.Colour.from_rgb(229,160,13))
+                    embed.set_author(name = ctx.message.author, icon_url = ctx.author.avatar.url)
+                    embed.add_field(name = 'Link accounts', value='https://mazi.pw/user', inline = False)
+                    embed.set_footer(text = "If you want to host you need all information.")
+                    await ctx.send(embed = embed)
+                    break
+                if plexstatus & discordstatus & serverurl:
+                    #ask what movie to watch and get rating key from it.
+                    try:
+                        embed = discord.Embed(title = "What movie would you like to host?", colour = discord.Colour.from_rgb(229,160,13))
+                        embed.set_author(name = ctx.message.author, icon_url = ctx.author.avatar.url)
+                        embed.set_footer(text = "Please send exact title.")
+                        await ctx.send(embed = embed)
+                        message = await client.wait_for('message', check=check, timeout=30)
+                        moviechoice = message.content
+                        try:
+                            try:
+                                encrypted = data["plexauth"]
+                                secret_key = config('AESKEY')
+                                encrypted = encrypted.split(':')
+                                nonce = b64decode(encrypted[0])
+                                encrypted = b64decode(encrypted[1])
+                                box = SecretBox(bytes(secret_key, encoding='utf8'))
+                                plexauth = box.decrypt(encrypted, nonce).decode('utf-8')
+                                plex = PlexServer(data["plexserverurl"], plexauth)
+                            except:
+                                print("failture")
+                            token = plex._token
+                            machineid = plex.machineIdentifier
+                            movie= plex.library.section('Movies').get(moviechoice)
+                            key = movie.ratingKey
+                            try:
+                                #making room name
+                                doc = db.collection(u'counts').document(u'counts')
+                                counts = doc.get()
+                                previouscount = counts.to_dict()
+                                roomnames = ["Action", "Animation", "Horror", "Adventure", "Comedy", "Romance", "SciFi", "Fantasy", "Musical"]
+                                roomname = random.choice(roomnames)+"-"+str(previouscount["counts"])
+                                userid = data["plexid"]
+                                thumb = data["plexthumb"]
+                                title = data["plextitle"]
+                                channel = ctx.channel.id
+                                discordid = discordid
+                                #add to firebase to allow joining
+                                try:
+                                    ref = db.collection(u'rooms').document(roomname)
+                                    ref.set({
+                                        u'Time Started': firestore.SERVER_TIMESTAMP,
+                                        u'Channel': channel,
+                                        u'MovieKey': key,
+                                        u'Server': serverurl,
+                                        u'MachineID': machineid,
+                                    }, merge=True)
+                                    #now add users to that document
+                                    userref = db.collection(u'rooms').document(roomname).collection(u'Users').document(discordid)
+                                    userref.set({
+                                        u'plexuserid': userid,
+                                        u'plexthumb': thumb,
+                                        u'plextitle': title,
+                                        u'discordid': discordid
+                                        }, merge=True)
+                                    try:
+                                        doc = db.collection(u'counts').document(u'counts')
+                                        counts = doc.get()
+                                        previouscount = counts.to_dict()
+                                        newcount = int(previouscount['counts']) + 1
+                                        doc.update({u'counts': newcount})
+                                    except Exception as e: 
+                                        print(e)
+                                        print('Adding count failed')
+                                except Exception as e:
+                                    print(e)
+                                    await ctx.send('```❌ Something went wrong and the movie couldnt get a room set up. Please try again, or report this using ">project"```')
+                                embed = discord.Embed(title = f"{roomname} is now open to join!", colour = discord.Colour.from_rgb(229,160,13))
+                                embed.set_author(name = ctx.message.author, icon_url = ctx.author.avatar.url)
+                                embed.add_field(name = 'Movie', value=f"We are watching {movie.title}!", inline = False)
+                                embed.add_field(name = 'Join Now', value="The room is now open to join! Run >join to join. Make sure you have linked your Plex and Discord accounts.", inline = False)
+                                embed.set_footer(text = "Room joining closes in 10 minutes.")
+                                await ctx.send(embed = embed)
+                                await asyncio.sleep(30)
+                                #start room
+                                try:
+                                    #get users from room
+                                    ref = db.collection(u'rooms').document(roomname)
+                                    doc = ref.get()
+                                    data = doc.to_dict()
+                                    machineid = data["MachineID"]
+                                    moviekey = data["MovieKey"]
+                                    #for users in data get user objects and add them to users
+                                    users = []
+                                    collections = db.collection(u'rooms').document(roomname).collections()
+                                    for collection in collections:
+                                        for doc in collection.stream():
+                                            data = doc.to_dict()
+                                            users.append(data)
+                                    url = f"https://together.plex.tv/rooms?X-Plex-Token={token}"
+                                    obj = {
+                                            "sourceUri": f"server://{machineid}/com.plexapp.plugins.library/library/metadata/{moviekey}",
+                                            "title": movie.title,
+                                            "users": users
+                                        }
+                                    try:
+                                        db.collection(u'rooms').document(roomname).delete()
+                                        roomstart = requests.post(url, json = obj)
+                                        await ctx.send("```Joining for movie night is closed. The lights are off and the popcorn is out. Open Plex on any device and join the Watch Together Session! The movie will begin shortly.```")
+                                    except:
+                                        await ctx.send('```❌ Something went wrong and the movie couldnt get a room set up. Please try again, or report this using ">project"```')
+                                except: 
+                                    await ctx.send('```❌ Something went wrong and the movie couldnt get a room set up. Please try again, or report this using ">project"```')
+                            except:
+                                await ctx.send('```❌ Something went wrong and the movie couldnt get a room set up. Please try again, or report this using ">project"```')
+                        except:
+                            await ctx.send('```❌ Movie not found in your library. Please check spelling or run ">movies" to view all of your movies.```')
+                    except asyncio.TimeoutError:
+                        await ctx.send('```❌ Timed out.```')
+        else:
+            embed = discord.Embed(title = "No account found!", colour = discord.Colour.from_rgb(229,160,13))
+            embed.set_author(name = ctx.message.author, icon_url = ctx.author.avatar.url)
+            embed.add_field(name = 'Create an account', value='https://mazi.pw/user', inline = False)
+            embed.set_footer(text = "If you like this project please donate using >donate.")
+            await ctx.send(embed = embed)
+    except: 
+        embed = discord.Embed(title = "No account found!", colour = discord.Colour.from_rgb(229,160,13))
+        embed.set_author(name = ctx.message.author, icon_url = ctx.author.avatar.url)
+        embed.add_field(name = 'Create an account', value='https://mazi.pw/user', inline = False)
+        embed.set_footer(text = "If you like this project please donate using >donate.")
+        await ctx.send(embed = embed)
+@client.command()
+async def join(ctx):
+    discordid = ctx.message.author.id
+    discordid = str(discordid)
+    channel = ctx.channel.id
+    #get data
+    try:
+        docs = db.collection(u'users').where(u'discordid', u'==', discordid).stream()
+        if doc.exists:
+            for doc in docs:
+                data = doc.to_dict()
+                try:
+                    discordstatus = data["discord"]
+                    plexstatus = data["plex"]
+                except:
+                    embed = discord.Embed(title = "You haven't provided all information!", colour = discord.Colour.from_rgb(229,160,13))
+                    embed.set_author(name = ctx.message.author, icon_url = ctx.author.avatar.url)
+                    embed.add_field(name = 'Link accounts', value='https://mazi.pw/user', inline = False)
+                    embed.set_footer(text = "If you want to host you need all information.")
+                    await ctx.send(embed = embed)
+                    break
+                if plexstatus & discordstatus:
+                    #get all showings in channel
+                    try:
+                        docs = db.collection(u'rooms').where(u'Channel', u'==', channel).stream()
+                        for rooms in docs:
+                            roomname = rooms.id
+                    except:
+                        await ctx.send("Room has closed joining already!")
+                    #get user information
+                    doc = db.collection(u'users').where(u'discordid', u'==', discordid).stream()
+                    for doc in docs:
+                        data = doc.to_dict()
+                        userid = data["plexid"]
+                        thumb = data["plexthumb"]
+                        title = data["plextitle"]
+                        #add to roomname
+                        try:
+                            userref = db.collection(u'rooms').document(roomname).collection(u'Users').document(discordid)
+                            userref.set({
+                                u'plexuserid': userid,
+                                u'plexthumb': thumb,
+                                u'plextitle': title,
+                                u'discordid': discordid
+                                }, merge=True)
+                            await ctx.send(f"```You have joined {roomname}!")
+                        except:
+                            await ctx.send("```❌ There was an error joining the room.```")
+        else:
+            embed = discord.Embed(title = "No account found!", colour = discord.Colour.from_rgb(229,160,13))
+            embed.set_author(name = ctx.message.author, icon_url = ctx.author.avatar.url)
+            embed.add_field(name = 'Create an account', value='https://mazi.pw/user', inline = False)
+            embed.set_footer(text = "If you like this project please donate using >donate.")
+            await ctx.send(embed = embed)
+    except:
+        embed = discord.Embed(title = "No account found!", colour = discord.Colour.from_rgb(229,160,13))
+        embed.set_author(name = ctx.message.author, icon_url = ctx.author.avatar.url)
+        embed.add_field(name = 'Create an account', value='https://mazi.pw/user', inline = False)
+        embed.set_footer(text = "If you like this project please donate using >donate.")
+        await ctx.send(embed = embed)
+class async_discord_thread(Thread):
+    #thanks @FrankWhoee for this code snippet
+    def __init__(self):
+        Thread.__init__(self)
+        self.loop = asyncio.get_event_loop()
+        self.start()
+    async def starter(self):
+        await client.start(CLIENTTOKEN)
+    def run(self):
+        self.name = 'Discord.py'
+        self.loop.create_task(self.starter())
+        self.loop.run_forever()
+discord_thread = async_discord_thread()
+app.run(host="0.0.0.0", port="5001")
 client.run(CLIENTTOKEN)
