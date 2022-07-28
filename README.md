@@ -5,7 +5,7 @@ A discord bot to watch plex with your friends easily and through discord.
   <img src="/assets/mazilogodark.png#gh-light-mode-only" height="200">
   <img src="/assets/mazilogolight.png#gh-dark-mode-only" height="200">
 </div>
-
+# Invite = [Invite Mazi to your server](https://discord.com/api/oauth2/authorize?client_id=978163786886311977&permissions=93184&redirect_uri=https%3A%2F%2Fapi.mazi.pw%2Fdiscordsuccess&response_type=code&scope=identify%20email%20bot%20applications.commands)
 # Website = [Mazi.pw](https://mazi.pw)
 
 Here you can link your accounts so you can use the Mazi Bot. Accounts are required to use the Mazi bot. You may get an alert from Plex when linking about a "security alert", and it will show the server IP, this will be fixed eventually, but do not worry about it.
