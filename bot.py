@@ -103,50 +103,51 @@ async def movies(ctx):
     #get data
     try:
         docs = db.collection(u'users').where(u'discordid', u'==', discordid).stream()
-        if doc.exists:
-            for doc in docs:
-                data = doc.to_dict()
+        empty = True
+        for doc in docs:
+            data = doc.to_dict()
+            try:
+                discordstatus = data["discord"]
+                plexstatus = data["plex"]
+                serverurl = data["plexserverurl"]
+                if len(serverurl)>0:
+                    serverurl = True
+            except:
+                embed = discord.Embed(title = "You haven't provided all information!", colour = discord.Colour.from_rgb(229,160,13))
+                embed.set_author(name = ctx.message.author, icon_url = ctx.author.avatar.url)
+                embed.add_field(name = 'Link accounts', value='https://mazi.pw/user', inline = False)
+                embed.set_footer(text = "If you want to host you need all information.")
+                await ctx.send(embed = embed)
+                break
+            if plexstatus & discordstatus & serverurl:
                 try:
-                    discordstatus = data["discord"]
-                    plexstatus = data["plex"]
-                    serverurl = data["plexserverurl"]
-                    if len(serverurl)>0:
-                        serverurl = True
-                except:
-                    embed = discord.Embed(title = "You haven't provided all information!", colour = discord.Colour.from_rgb(229,160,13))
-                    embed.set_author(name = ctx.message.author, icon_url = ctx.author.avatar.url)
-                    embed.add_field(name = 'Link accounts', value='https://mazi.pw/user', inline = False)
-                    embed.set_footer(text = "If you want to host you need all information.")
-                    await ctx.send(embed = embed)
-                    break
-                if plexstatus & discordstatus & serverurl:
-                    try:
-                        moviefields = []
-                        for movie in getMovies(data):
-                            moviefields.append(movie)
-                        movies = ""
-                        for items in moviefields:
-                            movies += f"{items}\n"
-                        #math
-                        if len(moviefields) == 0:
-                            await ctx.send("```❌No movies in Plex Movie library.```")
-                        if len(moviefields) > 0:
-                            embed = discord.Embed(title = "Available Plex Movies", description=movies, colour = discord.Colour.from_rgb(229,160,13))
-                            embed.set_author(name = ctx.message.author, icon_url = ctx.author.avatar.url)
-                            embed.set_footer(text = f"{ctx.message.author}'s movies")
-                            await ctx.send(embed = embed)
-                        if len(movies) > 4096:
-                            await ctx.send("```❌ You have too many movies to display.```")
-                    except Exception as e:
-                        print(e)
-                        await ctx.send("```❌ Your Plex Server is not accessible!```")
-        else:
+                    moviefields = []
+                    for movie in getMovies(data):
+                        moviefields.append(movie)
+                    movies = ""
+                    for items in moviefields:
+                        movies += f"{items}\n"
+                    #math
+                    if len(moviefields) == 0:
+                        await ctx.send("```❌No movies in Plex Movie library.```")
+                    if len(moviefields) > 0:
+                        embed = discord.Embed(title = "Available Plex Movies", description=movies, colour = discord.Colour.from_rgb(229,160,13))
+                        embed.set_author(name = ctx.message.author, icon_url = ctx.author.avatar.url)
+                        embed.set_footer(text = f"{ctx.message.author}'s movies")
+                        await ctx.send(embed = embed)
+                    if len(movies) > 4096:
+                        await ctx.send("```❌ You have too many movies to display.```")
+                except Exception as e:
+                    print(e)
+                    await ctx.send("```❌ Your Plex Server is not accessible!```")
+        if empty:
             embed = discord.Embed(title = "No account found!", colour = discord.Colour.from_rgb(229,160,13))
             embed.set_author(name = ctx.message.author, icon_url = ctx.author.avatar.url)
             embed.add_field(name = 'Create an account', value='https://mazi.pw/user', inline = False)
             embed.set_footer(text = "If you like this project please donate using >donate.")
             await ctx.send(embed = embed)
-    except: 
+    except Exception as e:
+        print(e) 
         embed = discord.Embed(title = "No account found!", colour = discord.Colour.from_rgb(229,160,13))
         embed.set_author(name = ctx.message.author, icon_url = ctx.author.avatar.url)
         embed.add_field(name = 'Create an account', value='https://mazi.pw/user', inline = False)
@@ -180,138 +181,140 @@ async def host(ctx):
     #get data
     try:
         docs = db.collection(u'users').where(u'discordid', u'==', discordid).stream()
-        if doc.exists:
-            for doc in docs:
-                data = doc.to_dict()
+        empty = True
+        for doc in docs:
+            empty = False
+            data = doc.to_dict()
+            try:
+                discordstatus = data["discord"]
+                plexstatus = data["plex"]
+                serverurl = data["plexserverurl"]
+                if len(serverurl)>0:
+                    serverurl = True
+            except:
+                embed = discord.Embed(title = "You haven't provided all information!", colour = discord.Colour.from_rgb(229,160,13))
+                embed.set_author(name = ctx.message.author, icon_url = ctx.author.avatar.url)
+                embed.add_field(name = 'Link accounts', value='https://mazi.pw/user', inline = False)
+                embed.set_footer(text = "If you want to host you need all information.")
+                await ctx.send(embed = embed)
+                break
+            if plexstatus & discordstatus & serverurl:
+                #ask what movie to watch and get rating key from it.
                 try:
-                    discordstatus = data["discord"]
-                    plexstatus = data["plex"]
-                    serverurl = data["plexserverurl"]
-                    if len(serverurl)>0:
-                        serverurl = True
-                except:
-                    embed = discord.Embed(title = "You haven't provided all information!", colour = discord.Colour.from_rgb(229,160,13))
+                    embed = discord.Embed(title = "What movie would you like to host?", colour = discord.Colour.from_rgb(229,160,13))
                     embed.set_author(name = ctx.message.author, icon_url = ctx.author.avatar.url)
-                    embed.add_field(name = 'Link accounts', value='https://mazi.pw/user', inline = False)
-                    embed.set_footer(text = "If you want to host you need all information.")
+                    embed.set_footer(text = "Please send exact title.")
                     await ctx.send(embed = embed)
-                    break
-                if plexstatus & discordstatus & serverurl:
-                    #ask what movie to watch and get rating key from it.
+                    message = await client.wait_for('message', check=check, timeout=30)
+                    moviechoice = message.content
                     try:
-                        embed = discord.Embed(title = "What movie would you like to host?", colour = discord.Colour.from_rgb(229,160,13))
-                        embed.set_author(name = ctx.message.author, icon_url = ctx.author.avatar.url)
-                        embed.set_footer(text = "Please send exact title.")
-                        await ctx.send(embed = embed)
-                        message = await client.wait_for('message', check=check, timeout=30)
-                        moviechoice = message.content
                         try:
+                            encrypted = data["plexauth"]
+                            secret_key = config('AESKEY')
+                            encrypted = encrypted.split(':')
+                            nonce = b64decode(encrypted[0])
+                            encrypted = b64decode(encrypted[1])
+                            box = SecretBox(bytes(secret_key, encoding='utf8'))
+                            plexauth = box.decrypt(encrypted, nonce).decode('utf-8')
+                            plex = PlexServer(data["plexserverurl"], plexauth)
+                        except:
+                            print("failture")
+                        token = plex._token
+                        machineid = plex.machineIdentifier
+                        movie= plex.library.section('Movies').get(moviechoice)
+                        key = movie.ratingKey
+                        try:
+                            #making room name
+                            doc = db.collection(u'counts').document(u'counts')
+                            counts = doc.get()
+                            previouscount = counts.to_dict()
+                            roomnames = ["Action", "Animation", "Horror", "Adventure", "Comedy", "Romance", "SciFi", "Fantasy", "Musical"]
+                            roomname = random.choice(roomnames)+"-"+str(previouscount["counts"])
+                            userid = data["plexid"]
+                            thumb = data["plexthumb"]
+                            title = data["plextitle"]
+                            channel = ctx.channel.id
+                            discordid = discordid
+                            #add to firebase to allow joining
                             try:
-                                encrypted = data["plexauth"]
-                                secret_key = config('AESKEY')
-                                encrypted = encrypted.split(':')
-                                nonce = b64decode(encrypted[0])
-                                encrypted = b64decode(encrypted[1])
-                                box = SecretBox(bytes(secret_key, encoding='utf8'))
-                                plexauth = box.decrypt(encrypted, nonce).decode('utf-8')
-                                plex = PlexServer(data["plexserverurl"], plexauth)
-                            except:
-                                print("failture")
-                            token = plex._token
-                            machineid = plex.machineIdentifier
-                            movie= plex.library.section('Movies').get(moviechoice)
-                            key = movie.ratingKey
-                            try:
-                                #making room name
-                                doc = db.collection(u'counts').document(u'counts')
-                                counts = doc.get()
-                                previouscount = counts.to_dict()
-                                roomnames = ["Action", "Animation", "Horror", "Adventure", "Comedy", "Romance", "SciFi", "Fantasy", "Musical"]
-                                roomname = random.choice(roomnames)+"-"+str(previouscount["counts"])
-                                userid = data["plexid"]
-                                thumb = data["plexthumb"]
-                                title = data["plextitle"]
-                                channel = ctx.channel.id
-                                discordid = discordid
-                                #add to firebase to allow joining
-                                try:
-                                    ref = db.collection(u'rooms').document(roomname)
-                                    ref.set({
-                                        u'Time Started': firestore.SERVER_TIMESTAMP,
-                                        u'Channel': channel,
-                                        u'MovieKey': key,
-                                        u'Server': serverurl,
-                                        u'MachineID': machineid,
+                                ref = db.collection(u'rooms').document(roomname)
+                                ref.set({
+                                    u'Time Started': firestore.SERVER_TIMESTAMP,
+                                    u'Channel': channel,
+                                    u'MovieKey': key,
+                                    u'Server': serverurl,
+                                    u'MachineID': machineid,
+                                }, merge=True)
+                                #now add users to that document
+                                userref = db.collection(u'rooms').document(roomname).collection(u'Users').document(discordid)
+                                userref.set({
+                                    u'plexuserid': userid,
+                                    u'plexthumb': thumb,
+                                    u'plextitle': title,
+                                    u'discordid': discordid
                                     }, merge=True)
-                                    #now add users to that document
-                                    userref = db.collection(u'rooms').document(roomname).collection(u'Users').document(discordid)
-                                    userref.set({
-                                        u'plexuserid': userid,
-                                        u'plexthumb': thumb,
-                                        u'plextitle': title,
-                                        u'discordid': discordid
-                                        }, merge=True)
-                                    try:
-                                        doc = db.collection(u'counts').document(u'counts')
-                                        counts = doc.get()
-                                        previouscount = counts.to_dict()
-                                        newcount = int(previouscount['counts']) + 1
-                                        doc.update({u'counts': newcount})
-                                    except Exception as e: 
-                                        print(e)
-                                        print('Adding count failed')
-                                except Exception as e:
-                                    print(e)
-                                    await ctx.send('```❌ Something went wrong and the movie couldnt get a room set up. Please try again, or report this using ">project"```')
-                                embed = discord.Embed(title = f"{roomname} is now open to join!", colour = discord.Colour.from_rgb(229,160,13))
-                                embed.set_author(name = ctx.message.author, icon_url = ctx.author.avatar.url)
-                                embed.add_field(name = 'Movie', value=f"We are watching {movie.title}!", inline = False)
-                                embed.add_field(name = 'Join Now', value="The room is now open to join! Run >join to join. Make sure you have linked your Plex and Discord accounts.", inline = False)
-                                embed.set_footer(text = "Room joining closes in 10 minutes.")
-                                await ctx.send(embed = embed)
-                                await asyncio.sleep(600)
-                                #start room
                                 try:
-                                    #get users from room
-                                    ref = db.collection(u'rooms').document(roomname)
-                                    doc = ref.get()
-                                    data = doc.to_dict()
-                                    machineid = data["MachineID"]
-                                    moviekey = data["MovieKey"]
-                                    #for users in data get user objects and add them to users
-                                    users = []
-                                    collections = db.collection(u'rooms').document(roomname).collections()
-                                    for collection in collections:
-                                        for doc in collection.stream():
-                                            data = doc.to_dict()
-                                            users.append(data)
-                                    url = f"https://together.plex.tv/rooms?X-Plex-Token={token}"
-                                    obj = {
-                                            "sourceUri": f"server://{machineid}/com.plexapp.plugins.library/library/metadata/{moviekey}",
-                                            "title": movie.title,
-                                            "users": users
-                                        }
-                                    try:
-                                        db.collection(u'rooms').document(roomname).delete()
-                                        roomstart = requests.post(url, json = obj)
-                                        await ctx.send("```Joining for movie night is closed. The lights are off and the popcorn is out. Open Plex on any device and join the Watch Together Session! The movie will begin shortly.```")
-                                    except:
-                                        await ctx.send('```❌ Something went wrong and the movie couldnt get a room set up. Please try again, or report this using ">project"```')
-                                except: 
+                                    doc = db.collection(u'counts').document(u'counts')
+                                    counts = doc.get()
+                                    previouscount = counts.to_dict()
+                                    newcount = int(previouscount['counts']) + 1
+                                    doc.update({u'counts': newcount})
+                                except Exception as e: 
+                                    print(e)
+                                    print('Adding count failed')
+                            except Exception as e:
+                                print(e)
+                                await ctx.send('```❌ Something went wrong and the movie couldnt get a room set up. Please try again, or report this using ">project"```')
+                            embed = discord.Embed(title = f"{roomname} is now open to join!", colour = discord.Colour.from_rgb(229,160,13))
+                            embed.set_author(name = ctx.message.author, icon_url = ctx.author.avatar.url)
+                            embed.add_field(name = 'Movie', value=f"We are watching {movie.title}!", inline = False)
+                            embed.add_field(name = 'Join Now', value="The room is now open to join! Run >join to join. Make sure you have linked your Plex and Discord accounts.", inline = False)
+                            embed.set_footer(text = "Room joining closes in 10 minutes.")
+                            await ctx.send(embed = embed)
+                            await asyncio.sleep(600)
+                            #start room
+                            try:
+                                #get users from room
+                                ref = db.collection(u'rooms').document(roomname)
+                                doc = ref.get()
+                                data = doc.to_dict()
+                                machineid = data["MachineID"]
+                                moviekey = data["MovieKey"]
+                                #for users in data get user objects and add them to users
+                                users = []
+                                collections = db.collection(u'rooms').document(roomname).collections()
+                                for collection in collections:
+                                    for doc in collection.stream():
+                                        data = doc.to_dict()
+                                        users.append(data)
+                                url = f"https://together.plex.tv/rooms?X-Plex-Token={token}"
+                                obj = {
+                                        "sourceUri": f"server://{machineid}/com.plexapp.plugins.library/library/metadata/{moviekey}",
+                                        "title": movie.title,
+                                        "users": users
+                                    }
+                                try:
+                                    db.collection(u'rooms').document(roomname).delete()
+                                    roomstart = requests.post(url, json = obj)
+                                    await ctx.send("```Joining for movie night is closed. The lights are off and the popcorn is out. Open Plex on any device and join the Watch Together Session! The movie will begin shortly.```")
+                                except:
                                     await ctx.send('```❌ Something went wrong and the movie couldnt get a room set up. Please try again, or report this using ">project"```')
-                            except:
+                            except: 
                                 await ctx.send('```❌ Something went wrong and the movie couldnt get a room set up. Please try again, or report this using ">project"```')
                         except:
-                            await ctx.send('```❌ Movie not found in your library. Please check spelling or run ">movies" to view all of your movies.```')
-                    except asyncio.TimeoutError:
-                        await ctx.send('```❌ Timed out.```')
-        else:
+                            await ctx.send('```❌ Something went wrong and the movie couldnt get a room set up. Please try again, or report this using ">project"```')
+                    except:
+                        await ctx.send('```❌ Movie not found in your library. Please check spelling or run ">movies" to view all of your movies.```')
+                except asyncio.TimeoutError:
+                    await ctx.send('```❌ Timed out.```')
+        if empty:
             embed = discord.Embed(title = "No account found!", colour = discord.Colour.from_rgb(229,160,13))
             embed.set_author(name = ctx.message.author, icon_url = ctx.author.avatar.url)
             embed.add_field(name = 'Create an account', value='https://mazi.pw/user', inline = False)
             embed.set_footer(text = "If you like this project please donate using >donate.")
             await ctx.send(embed = embed)
-    except: 
+    except Exception as e:
+        print(e) 
         embed = discord.Embed(title = "No account found!", colour = discord.Colour.from_rgb(229,160,13))
         embed.set_author(name = ctx.message.author, icon_url = ctx.author.avatar.url)
         embed.add_field(name = 'Create an account', value='https://mazi.pw/user', inline = False)
@@ -325,53 +328,54 @@ async def join(ctx):
     #get data
     try:
         docs = db.collection(u'users').where(u'discordid', u'==', discordid).stream()
-        if doc.exists:
-            for doc in docs:
-                data = doc.to_dict()
+        empty = True
+        for doc in docs:
+            empty = False
+            data = doc.to_dict()
+            try:
+                discordstatus = data["discord"]
+                plexstatus = data["plex"]
+            except:
+                embed = discord.Embed(title = "You haven't provided all information!", colour = discord.Colour.from_rgb(229,160,13))
+                embed.set_author(name = ctx.message.author, icon_url = ctx.author.avatar.url)
+                embed.add_field(name = 'Link accounts', value='https://mazi.pw/user', inline = False)
+                embed.set_footer(text = "If you want to host you need all information.")
+                await ctx.send(embed = embed)
+                break
+            if plexstatus & discordstatus:
+                #get all showings in channel
                 try:
-                    discordstatus = data["discord"]
-                    plexstatus = data["plex"]
+                    docs = db.collection(u'rooms').where(u'Channel', u'==', channel).stream()
+                    for rooms in docs:
+                        roomname = rooms.id
                 except:
-                    embed = discord.Embed(title = "You haven't provided all information!", colour = discord.Colour.from_rgb(229,160,13))
-                    embed.set_author(name = ctx.message.author, icon_url = ctx.author.avatar.url)
-                    embed.add_field(name = 'Link accounts', value='https://mazi.pw/user', inline = False)
-                    embed.set_footer(text = "If you want to host you need all information.")
-                    await ctx.send(embed = embed)
-                    break
-                if plexstatus & discordstatus:
-                    #get all showings in channel
+                    await ctx.send("Room has closed joining already!")
+                #get user information
+                doc = db.collection(u'users').where(u'discordid', u'==', discordid).stream()
+                for doc in docs:
+                    data = doc.to_dict()
+                    userid = data["plexid"]
+                    thumb = data["plexthumb"]
+                    title = data["plextitle"]
+                    #add to roomname
                     try:
-                        docs = db.collection(u'rooms').where(u'Channel', u'==', channel).stream()
-                        for rooms in docs:
-                            roomname = rooms.id
+                        userref = db.collection(u'rooms').document(roomname).collection(u'Users').document(discordid)
+                        userref.set({
+                            u'plexuserid': userid,
+                            u'plexthumb': thumb,
+                            u'plextitle': title,
+                            u'discordid': discordid
+                            }, merge=True)
+                        await ctx.send(f"```You have joined {roomname}!")
                     except:
-                        await ctx.send("Room has closed joining already!")
-                    #get user information
-                    doc = db.collection(u'users').where(u'discordid', u'==', discordid).stream()
-                    for doc in docs:
-                        data = doc.to_dict()
-                        userid = data["plexid"]
-                        thumb = data["plexthumb"]
-                        title = data["plextitle"]
-                        #add to roomname
-                        try:
-                            userref = db.collection(u'rooms').document(roomname).collection(u'Users').document(discordid)
-                            userref.set({
-                                u'plexuserid': userid,
-                                u'plexthumb': thumb,
-                                u'plextitle': title,
-                                u'discordid': discordid
-                                }, merge=True)
-                            await ctx.send(f"```You have joined {roomname}!")
-                        except:
-                            await ctx.send("```❌ There was an error joining the room.```")
-        else:
+                        await ctx.send("```❌ There was an error joining the room.```")
+        if empty:
             embed = discord.Embed(title = "No account found!", colour = discord.Colour.from_rgb(229,160,13))
             embed.set_author(name = ctx.message.author, icon_url = ctx.author.avatar.url)
             embed.add_field(name = 'Create an account', value='https://mazi.pw/user', inline = False)
             embed.set_footer(text = "If you like this project please donate using >donate.")
             await ctx.send(embed = embed)
-    except:
+    except Exception as e:
         embed = discord.Embed(title = "No account found!", colour = discord.Colour.from_rgb(229,160,13))
         embed.set_author(name = ctx.message.author, icon_url = ctx.author.avatar.url)
         embed.add_field(name = 'Create an account', value='https://mazi.pw/user', inline = False)
