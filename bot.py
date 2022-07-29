@@ -370,10 +370,9 @@ async def join(ctx):
                     try:
                         userref = db.collection(u'rooms').document(roomname).collection(u'Users').document(discordid)
                         userref.set({
-                            u'plexuserid': userid,
-                            u'plexthumb': thumb,
-                            u'plextitle': title,
-                            u'discordid': discordid
+                            u'id': userid,
+                            u'thumb': thumb,
+                            u'title': title,
                             }, merge=True)
                         await ctx.send(f"```You have joined {roomname}!```")
                     except:
@@ -404,6 +403,5 @@ class async_discord_thread(Thread):
         self.name = 'Discord.py'
         self.loop.create_task(self.starter())
         self.loop.run_forever()
-#discord_thread = async_discord_thread()
-#app.run(host="0.0.0.0", port="5001")
-client.run(CLIENTTOKEN)
+discord_thread = async_discord_thread()
+app.run(host="0.0.0.0", port="5001")
