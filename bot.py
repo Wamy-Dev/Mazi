@@ -31,7 +31,7 @@ db = firestore.client()
 #counts
 doc = db.collection(u'counts').document(u'counts')
 #discord
-CLIENTTOKEN = config('CLIENTTOKENT')
+CLIENTTOKEN = config('CLIENTTOKEN')
 intents = discord.Intents.default()
 intents.message_content = True
 client = commands.Bot(command_prefix = '>', intents=intents)
@@ -378,7 +378,7 @@ async def join(ctx):
                     except:
                         await ctx.send("```❌ There was an error joining the room.```")
                 if empty:
-                    await ctx.send("peepee")
+                    await ctx.send("```❌ There was an error joining the room.```")
         if empty:
             embed = discord.Embed(title = "No account found!", colour = discord.Colour.from_rgb(229,160,13))
             embed.set_author(name = ctx.message.author, icon_url = ctx.author.avatar.url)
