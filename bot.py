@@ -4,7 +4,8 @@
 # / /___/ /_/ / /_/ /  / __  / /_/ / / / / /_/  __/ /  (__  )   
 #/_____/\__, /\__, /  /_/ /_/\__,_/_/ /_/\__/\___/_/  /____(_)  
 #      /____//____/                                             
-# 
+# directlycrazy.1812
+# Mato.5201
 import discord
 from discord.ext import commands
 from quart import Quart
