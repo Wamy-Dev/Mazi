@@ -31,7 +31,7 @@ db = firestore.client()
 #counts
 doc = db.collection(u'counts').document(u'counts')
 #discord
-CLIENTTOKEN = config('CLIENTTOKEN')
+CLIENTTOKEN = config('CLIENTTOKENT')
 intents = discord.Intents.default()
 intents.message_content = True
 client = commands.Bot(command_prefix = '>', intents=intents)
@@ -249,10 +249,9 @@ async def host(ctx):
                                 #now add users to that document
                                 userref = db.collection(u'rooms').document(roomname).collection(u'Users').document(discordid)
                                 userref.set({
-                                    u'plexuserid': userid,
-                                    u'plexthumb': thumb,
-                                    u'plextitle': title,
-                                    u'discordid': discordid
+                                    u'id': userid,
+                                    u'thumb': thumb,
+                                    u'title': title
                                     }, merge=True)
                                 try:
                                     doc = db.collection(u'counts').document(u'counts')
@@ -353,11 +352,15 @@ async def join(ctx):
                         roomname = rooms.id
                     if norooms:
                         await ctx.send("```❌ There are no open rooms to join!```")
+                        break
                 except:
                     await ctx.send("```❌ There are no open rooms to join!```")
+                    break
                 #get user information
-                doc = db.collection(u'users').where(u'discordid', u'==', discordid).stream()
-                for doc in docs:
+                document = db.collection(u'users').where(u'discordid', u'==', discordid).stream()
+                empty = True
+                for doc in document:
+                    empty = False
                     data = doc.to_dict()
                     userid = data["plexid"]
                     thumb = data["plexthumb"]
@@ -371,9 +374,11 @@ async def join(ctx):
                             u'plextitle': title,
                             u'discordid': discordid
                             }, merge=True)
-                        await ctx.send(f"```You have joined {roomname}!")
+                        await ctx.send(f"```You have joined {roomname}!```")
                     except:
                         await ctx.send("```❌ There was an error joining the room.```")
+                if empty:
+                    await ctx.send("peepee")
         if empty:
             embed = discord.Embed(title = "No account found!", colour = discord.Colour.from_rgb(229,160,13))
             embed.set_author(name = ctx.message.author, icon_url = ctx.author.avatar.url)
@@ -398,6 +403,6 @@ class async_discord_thread(Thread):
         self.name = 'Discord.py'
         self.loop.create_task(self.starter())
         self.loop.run_forever()
-discord_thread = async_discord_thread()
-app.run(host="0.0.0.0", port="5001")
+#discord_thread = async_discord_thread()
+#app.run(host="0.0.0.0", port="5001")
 client.run(CLIENTTOKEN)
