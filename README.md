@@ -1,7 +1,6 @@
 # Mazi
 A discord bot to watch plex with your friends easily and through discord. The first ever Movie Night Discord Bot.
 
-***As of now, Mazi requires users to be friends, and to have libraries shared. If this message is here, then it is still in effect. This will be changed soon (hopefully) and if this message is no longer here, then the problem is fixed.***
 <div align="center">
   <img src="/assets/mazilogodark.png#gh-light-mode-only" height="200">
   <img src="/assets/mazilogolight.png#gh-dark-mode-only" height="200">
@@ -16,12 +15,12 @@ Here you can link your accounts so you can use the Mazi Bot. Accounts are requir
 # How does this work?
 1. First sign up for an account at [Mazi.pw](https://mazi.pw/user).
 2. Link both your Discord and Plex accounts to it. If you are hosting Watch Together Sessions, make sure to add your public server url. This can be an ip or a url to your server. Make sure it is valid before submitting!
-3. If you are hosting, use `>host` to begin a session. It will make a session, and will wait 10 minutes for people to join the room. If you are joining, use `>join` to join a joinable room. Make sure you are in the same channel as where the room was started.
-4. After the 10 minutes has passed, the room will close and the movie will begin. All users who have joined need to now open up Plex on any device, and join the Watch Together session.
+3. If you are hosting, use `>host` to begin a session. It will make a session, and will wait 5 minutes for people to join the room. If you are joining, use `>join` to join a joinable room. Make sure you are in the same channel as where the room was started.
+4. After the 5 minutes has passed, the room will close and requests will go out to users who are not already friends with the hoster on Plex with a grace period of 5 minutes. After those 5 minutes, all users who have joined need to now open up Plex on any device, and join the Watch Together session.
 5. Get your popcorn and drinks ready, cause the movie is starting!
 
 # Do you store my data?
-Yes, in an effort to be as transparent as possible, this is all the data we store. `Discord ID, Discord Email, Plex Auth Token (encrypted securely in AES), Plex email, Plex ID, Plex UUID, Plex Username, Plex Server URL, Plex User Profile Image, and your Mazi Email`. This data is stored securely in [Firebase Firestore](https://firebase.google.com/support/privacy) and I cannot decrypt your Plex Auth Token, or access either of your Discord or Plex accounts in any way. If you would like to delete all of your data, there is an "Unlink Data" button in the bottom left of the user panel. 
+Yes, in an effort to be as transparent as possible, this is all the data we store. `Discord ID, Discord Email, Plex Auth Token (encrypted securely in AES), Plex email, Plex ID, Plex UUID, Plex Username, Plex Server URL, Plex User Profile Image, and your Mazi Email`. This data is stored securely in [Firebase Firestore](https://firebase.google.com/support/privacy) and I cannot decrypt your Plex Auth Token, or access either of your Discord or Plex accounts in any way. If you would like to delete all of your data, there is an "Unlink Data" button in the bottom left of the user panel. For more please read the [Mazi Privacy Policy](https://github.com/Wamy-Dev/Mazi/wiki/Privacy-Policy) for more information.
 
 # Features
 - [x] Easy Plex and Discord Linking
