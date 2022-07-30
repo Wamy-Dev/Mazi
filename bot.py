@@ -235,6 +235,7 @@ async def host(ctx):
                             userid = data["plexid"]
                             thumb = data["plexthumb"]
                             title = data["plextitle"]
+                            email = data["plexemail"]
                             channel = ctx.channel.id
                             discordid = discordid
                             #add to firebase to allow joining
@@ -252,7 +253,8 @@ async def host(ctx):
                                 userref.set({
                                     u'id': userid,
                                     u'thumb': thumb,
-                                    u'title': title
+                                    u'title': title,
+                                    u'email': email,
                                     }, merge=True)
                                 try:
                                     doc = db.collection(u'counts').document(u'counts')
@@ -270,9 +272,9 @@ async def host(ctx):
                             embed.set_author(name = ctx.message.author, icon_url = ctx.author.avatar.url)
                             embed.add_field(name = 'Movie', value=f"We are watching {movie.title}!", inline = False)
                             embed.add_field(name = 'Join Now', value="The room is now open to join! Run >join to join. Make sure you have linked your Plex and Discord accounts.", inline = False)
-                            embed.set_footer(text = "Room joining closes in 10 minutes.")
+                            embed.set_footer(text = "Room joining closes in 5 minutes.")
                             await ctx.send(embed = embed)
-                            await asyncio.sleep(600)
+                            await asyncio.sleep(300)
                             #start room
                             try:
                                 #get users from room
@@ -287,6 +289,13 @@ async def host(ctx):
                                 for collection in collections:
                                     for doc in collection.stream():
                                         data = doc.to_dict()
+                                        #send request to all users in rooms
+                                        username = data["email"]
+                                        try:
+                                            plex.myPlexAccount().inviteFriend(user=username, server=plex)
+                                        except Exception as e:
+                                            print(e)
+                                        data.pop("email")
                                         users.append(data)
                                 url = f"https://together.plex.tv/rooms?X-Plex-Token={token}"
                                 obj = {
@@ -296,8 +305,10 @@ async def host(ctx):
                                     }
                                 try:
                                     db.collection(u'rooms').document(roomname).delete()
+                                    await ctx.send(f"```Joining for {roomname} is closed. Open Plex on any device and accept the friend request if you are not already friends with the hoster. Then in 5 minutes, join the Watch Together session. {movie.title.capitalize()} will begin shortly.```")
+                                    await asyncio.sleep(300)
                                     roomstart = requests.post(url, json = obj)
-                                    await ctx.send("```Joining for movie night is closed. The lights are off and the popcorn is out. Open Plex on any device and join the Watch Together Session! The movie will begin shortly.```")
+                                    await ctx.send(f"```{roomname} has now started watching {movie.title}!```")
                                 except:
                                     await ctx.send('```❌ Something went wrong and the movie couldnt get a room set up. Please try again, or report this using ">project"```')
                             except: 
@@ -366,6 +377,7 @@ async def join(ctx):
                     userid = data["plexid"]
                     thumb = data["plexthumb"]
                     title = data["plextitle"]
+                    email = data["plexemail"]
                     #add to roomname
                     try:
                         userref = db.collection(u'rooms').document(roomname).collection(u'Users').document(discordid)
@@ -373,6 +385,7 @@ async def join(ctx):
                             u'id': userid,
                             u'thumb': thumb,
                             u'title': title,
+                            u'email': email
                             }, merge=True)
                         await ctx.send(f"```You have joined {roomname}!```")
                     except:
