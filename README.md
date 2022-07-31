@@ -7,6 +7,7 @@ A discord bot to watch plex with your friends easily and through discord. The fi
 </div>
 
 # Invite = [Invite Mazi to your server](https://discord.com/api/oauth2/authorize?client_id=978163786886311977&permissions=93184&redirect_uri=https%3A%2F%2Fapi.mazi.pw%2Fdiscordsuccess&scope=bot%20applications.commands)
+If you have any problems please read the [FAQ](https://github.com/Wamy-Dev/Mazi/wiki/FAQ) first, then message me on Discord using the server invite below if you still need help. The bot is also on [Top.gg](https://top.gg/bot/978163786886311977?s=0c29b1e62673d)! Please go give it a vote!
 
 # Website = [Mazi.pw](https://mazi.pw)
 
