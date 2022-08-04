@@ -171,7 +171,7 @@ def getMovies(data):
         encrypted = b64decode(encrypted[1])
         box = SecretBox(bytes(secret_key, encoding='utf8'))
         plexauth = box.decrypt(encrypted, nonce).decode('utf-8')
-        plex = PlexServer(data["plexserverurl"], plexauth)
+        plex = PlexServer(data["plexserverurl"], plexauth, timeout=5)
         movies = plex.library.section('Movies')
     except Exception as e:
         print(e)
@@ -223,7 +223,7 @@ async def host(ctx):
                             encrypted = b64decode(encrypted[1])
                             box = SecretBox(bytes(secret_key, encoding='utf8'))
                             plexauth = box.decrypt(encrypted, nonce).decode('utf-8')
-                            plex = PlexServer(data["plexserverurl"], plexauth)
+                            plex = PlexServer(data["plexserverurl"], plexauth, timeout=5)
                         except:
                             embed = discord.Embed(title = "Your Plex Server is not accessible!", colour = discord.Colour.from_rgb(229,160,13))
                             embed.set_author(name = ctx.message.author, icon_url = ctx.author.avatar.url)
