@@ -131,7 +131,7 @@ async def movies(ctx):
                         movies += f"{items}\n"
                     #math
                     if len(moviefields) == 0:
-                        await ctx.send("```❌No movies in Plex Movie library.```")
+                        await ctx.send("```❌ No movies in Plex Movie library.```")
                     if len(moviefields) > 0:
                         embed = discord.Embed(title = "Available Plex Movies", description=movies, colour = discord.Colour.from_rgb(229,160,13))
                         embed.set_author(name = ctx.message.author, icon_url = ctx.author.avatar.url)
@@ -141,7 +141,12 @@ async def movies(ctx):
                         await ctx.send("```❌ You have too many movies to display.```")
                 except Exception as e:
                     print(e)
-                    await ctx.send("```❌ Your Plex Server is not accessible!```")
+                    embed = discord.Embed(title = "Your Plex Server is not accessible!", colour = discord.Colour.from_rgb(229,160,13))
+                    embed.set_author(name = ctx.message.author, icon_url = ctx.author.avatar.url)
+                    embed.add_field(name = 'Edit server info', value='https://mazi.pw/user', inline = False)
+                    embed.add_field(name = 'Why?', value='[Read the FAQ](https://github.com/Wamy-Dev/Mazi/wiki/FAQ#the-bot-says-you-server-is-inaccessible-but-i-can-access-it-just-fine-why)', inline = False)
+                    embed.set_footer(text = "If you like this project please donate using >donate.")
+                    await ctx.send(embed = embed)
         if empty:
             embed = discord.Embed(title = "No account found!", colour = discord.Colour.from_rgb(229,160,13))
             embed.set_author(name = ctx.message.author, icon_url = ctx.author.avatar.url)
@@ -220,7 +225,13 @@ async def host(ctx):
                             plexauth = box.decrypt(encrypted, nonce).decode('utf-8')
                             plex = PlexServer(data["plexserverurl"], plexauth)
                         except:
-                            print("failture")
+                            embed = discord.Embed(title = "Your Plex Server is not accessible!", colour = discord.Colour.from_rgb(229,160,13))
+                            embed.set_author(name = ctx.message.author, icon_url = ctx.author.avatar.url)
+                            embed.add_field(name = 'Edit server info', value='https://mazi.pw/user', inline = False)
+                            embed.add_field(name = 'Why?', value='[Read the FAQ](https://github.com/Wamy-Dev/Mazi/wiki/FAQ#the-bot-says-you-server-is-inaccessible-but-i-can-access-it-just-fine-why)', inline = False)
+                            embed.set_footer(text = "If you like this project please donate using >donate.")
+                            await ctx.send(embed = embed)
+                            break
                         token = plex._token
                         machineid = plex.machineIdentifier
                         movie= plex.library.section('Movies').get(moviechoice)
@@ -267,7 +278,7 @@ async def host(ctx):
                                     print('Adding count failed')
                             except Exception as e:
                                 print(e)
-                                await ctx.send('```❌ Something went wrong and the movie couldnt get a room set up. Please try again, or report this using ">project"```')
+                                await ctx.send('```❌ Something went wrong and the movie couldnt get a room set up. Error 280. Please try again, or report this using ">project"```')
                             embed = discord.Embed(title = f"{roomname} is now open to join!", colour = discord.Colour.from_rgb(229,160,13))
                             embed.set_author(name = ctx.message.author, icon_url = ctx.author.avatar.url)
                             embed.add_field(name = 'Movie', value=f"We are watching {movie.title}!", inline = False)
@@ -310,11 +321,11 @@ async def host(ctx):
                                     roomstart = requests.post(url, json = obj)
                                     await ctx.send(f"```{roomname} has now started watching {movie.title}!```")
                                 except:
-                                    await ctx.send('```❌ Something went wrong and the movie couldnt get a room set up. Please try again, or report this using ">project"```')
+                                    await ctx.send('```❌ Something went wrong and the movie couldnt get a room set up. Error 316. Please try again, or report this using ">project"```')
                             except: 
-                                await ctx.send('```❌ Something went wrong and the movie couldnt get a room set up. Please try again, or report this using ">project"```')
+                                await ctx.send('```❌ Something went wrong and the movie couldnt get a room set up. Error 289. Please try again, or report this using ">project"```')
                         except:
-                            await ctx.send('```❌ Something went wrong and the movie couldnt get a room set up. Please try again, or report this using ">project"```')
+                            await ctx.send('```❌ Something went wrong and the movie couldnt get a room set up. Error 238. Please try again, or report this using ">project"```')
                     except:
                         await ctx.send('```❌ Movie not found in your library. Please check spelling or run ">movies" to view all of your movies.```')
                 except asyncio.TimeoutError:
