@@ -128,7 +128,7 @@ async def movies(ctx):
                         moviefields.append(movie)
                     movies = ""
                     for items in moviefields:
-                        movies += f"{items}\n"
+                        movies += f'{items}\n'
                     #math
                     if len(moviefields) == 0:
                         await ctx.send("```❌ No movies in Plex Movie library.```")
@@ -176,9 +176,9 @@ def getMovies(data):
     except Exception as e:
         print(e)
     list = []
-    for video in movies.search():
+    for video in movies.all():
         list.append(video.title)
-        return(list)
+    return(list)
 @client.command()
 async def host(ctx):
     discordid = ctx.message.author.id
