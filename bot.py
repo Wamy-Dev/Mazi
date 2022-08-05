@@ -74,7 +74,7 @@ async def ping(ctx):
 async def counts(ctx):
     counts = doc.get()
     previouscount = counts.to_dict()
-    txt = str(f"""```css\nThe bot has hosted movie night {str(previouscount["counts"])} times.```""")
+    txt = str(f"""```css\nThe bot has hosted movie night {str(previouscount["counts"] - 1)} times.```""")
     await ctx.send(txt)
 @client.command(pass_context = True, aliases = ['Help'])
 async def help(ctx):
