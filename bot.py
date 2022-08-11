@@ -6,6 +6,7 @@
 #      /____//____/                                             
 # directlycrazy.1812
 # Mato.5201
+from re import I
 import discord
 from discord.ext import commands
 from quart import Quart, render_template
@@ -43,23 +44,21 @@ async def index():
             latencies.append(data)
         members = 0
         servers = client.guilds
-        servercount = []
+        servercount = {}
         for guild in servers:
-            data = {}
-            members += guild.member_count
             id = guild.shard_id
-            #get previous count
-            count = data.get(id)
-            if count == None:
-                count = 0     
-                count += 1
-            else:
-                count += 1
-            data[id] = count
-            servercount.append(data)
+            try:
+                count = servercount[id]
+            except:
+                count = 0
+            count += 1
+            servercount[id] = count
+            members += guild.member_count
         timeutc = str(datetime.utcnow())
         timenow = timeutc[:-7]
-        return await render_template("statuspage.html", latencies=latencies, members=members, servercount=servercount, timenow=timenow)
+        #get full number of servers
+        serverstotal = len(servers)
+        return await render_template("statuspage.html", latencies=latencies, members=members, servercount=servercount, timenow=timenow, serverstotal=serverstotal)
     else:
         return await render_template("failpage.html")
 #firebase

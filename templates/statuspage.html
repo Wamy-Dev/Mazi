@@ -18,7 +18,7 @@
         Mazi Bot status
       </h1>
         <p>
-            Serving {{ members }} members.
+            Serving {{ members }} members in {{ serverstotal }} servers.
         </p>
         <p>
           Updated at {{ timenow }} UTC.
@@ -27,11 +27,7 @@
         {% for shard in latencies %}
             <li>
                 Shard {{ shard["shard"] }}: {{ shard["latency"] }}ms ping. Up for {{ shard["uptime"]}}.
-                {% for item in servercount %}
-                  {% if item[shard["shard"]] is defined %}
-                    Running in {{ item[shard["shard"]] }} servers.
-                  {% endif %}
-                {% endfor %}
+                Running in {{ servercount[shard["shard"]] }} servers.
             </li>
         {% endfor %}
     </ul>
