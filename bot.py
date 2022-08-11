@@ -8,7 +8,7 @@
 # Mato.5201
 import discord
 from discord.ext import commands
-from quart import Quart
+from quart import Quart, render_template
 from decouple import config
 import firebase_admin
 from firebase_admin import credentials
@@ -20,11 +20,48 @@ from base64 import b64decode
 from nacl.secret import SecretBox
 import random
 import requests
+from datetime import datetime
+from humanfriendly import format_timespan
 #quart
 app = Quart(__name__)
+ready = False
+inittime = datetime.now()
 @app.route("/", methods = ["get"])
 async def index():
-    return '<h3><center>Mazi bot is up! ✔</center></h3>', 200
+    while ready:
+        latencies = []
+        for i in client.latencies:
+            data = {}
+            shard = i[0]
+            latency = round(i[1] * 1000)#in ms
+            data["shard"] = shard
+            data["latency"] = latency
+            uptime = datetime.now() - inittime
+            secuptime = uptime.total_seconds()
+            totaluptime = format_timespan(secuptime)
+            data["uptime"] = totaluptime
+            latencies.append(data)
+        members = 0
+        servers = client.guilds
+        servercount = []
+        for guild in servers:
+            data = {}
+            members += guild.member_count
+            id = guild.shard_id
+            #get previous count
+            count = data.get(id)
+            if count == None:
+                count = 0     
+                count += 1
+            else:
+                count += 1
+            data[id] = count
+            servercount.append(data)
+        timeutc = str(datetime.utcnow())
+        timenow = timeutc[:-7]
+        return await render_template("statuspage.html", latencies=latencies, members=members, servercount=servercount, timenow=timenow)
+    else:
+        return await render_template("failpage.html")
 #firebase
 cred = credentials.Certificate("./creds.json")
 firebase_admin.initialize_app(cred)
@@ -35,12 +72,15 @@ doc = db.collection(u'counts').document(u'counts')
 CLIENTTOKEN = config('CLIENTTOKEN')
 intents = discord.Intents.default()
 intents.message_content = True
-client = commands.Bot(command_prefix = '>', intents=intents)
+client = commands.AutoShardedBot(shard_count = 5, command_prefix = '>', intents=intents)
 client.remove_command('help')
 @client.event
 async def on_ready():
     print(f'Bot is ready. Logged in as {client.user}(ID: {client.user.id})')
+    print(f'Shards: {client.shard_count}')
     await client.change_presence(activity = discord.Activity(type = discord.ActivityType.watching, name = ">help"))#sets status as "Watching:!help"
+    global ready
+    ready = True
 @client.command()
 async def eggotyou(ctx):
     await ctx.send('Fine. You got me... screenshot this and send it to me on my discord to have your name put in the source code!', delete_after=5)
@@ -82,6 +122,7 @@ async def help(ctx):
     embed.set_author(name = ctx.message.author, icon_url = ctx.author.avatar.url)
     embed.add_field(name = '>host', value='Start a movie session.', inline = False)
     embed.add_field(name = '>join', value='If there is an active session, join it.', inline = False)
+    embed.add_field(name = '>movies', value='Get all movies that are available to watch.', inline = False)
     embed.add_field(name = '>link', value='Link your account to plex.', inline = False)
     embed.add_field(name = '>ping', value='Shows the ping between the bot and the user.', inline = False)
     embed.add_field(name = '>project', value='View the project Github.', inline = False)

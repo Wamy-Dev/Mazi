@@ -7,3 +7,4 @@ plexapi
 pynacl
 requests
 plexapi
+humanfriendly
