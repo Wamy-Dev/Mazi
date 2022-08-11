@@ -58,7 +58,8 @@ async def index():
         timenow = timeutc[:-7]
         #get full number of servers
         serverstotal = len(servers)
-        return await render_template("statuspage.html", latencies=latencies, members=members, servercount=servercount, timenow=timenow, serverstotal=serverstotal)
+        shardcount = client.shard_count
+        return await render_template("statuspage.html", latencies=latencies, members=members, servercount=servercount, timenow=timenow, serverstotal=serverstotal, shardcount=shardcount)
     else:
         return await render_template("failpage.html")
 #firebase
@@ -71,7 +72,7 @@ doc = db.collection(u'counts').document(u'counts')
 CLIENTTOKEN = config('CLIENTTOKEN')
 intents = discord.Intents.default()
 intents.message_content = True
-client = commands.AutoShardedBot(shard_count = 5, command_prefix = '>', intents=intents)
+client = commands.AutoShardedBot(command_prefix = '>', intents=intents)
 client.remove_command('help')
 @client.event
 async def on_ready():

@@ -18,7 +18,12 @@
         Mazi Bot status
       </h1>
         <p>
-            Serving {{ members }} members in {{ serverstotal }} servers.
+          Serving {{ members }} members in {{ serverstotal }} servers in {{ shardcount }} 
+          {% if shardcount == 1 %}
+            shard.
+          {% else %}
+            shards.
+          {% endif %}
         </p>
         <p>
           Updated at {{ timenow }} UTC.
@@ -27,14 +32,20 @@
         {% for shard in latencies %}
             <li>
                 Shard {{ shard["shard"] }}: {{ shard["latency"] }}ms ping. Up for {{ shard["uptime"]}}.
-                Running in {{ servercount[shard["shard"]] }} servers.
+                {% if servercount[shard["shard"]] is defined %}
+                  {% if servercount[shard["shard"]] == 1 %}
+                    Running in 1 server.
+                  {% else %}
+                    Running in {{ servercount[shard["shard"]] }} servers.
+                  {% endif %}
+                {% else %}
+                  Running in 0 servers.
+                {% endif %}
             </li>
         {% endfor %}
     </ul>
     </div>
   </div>
-    
-    <!--Waves Container-->
     <div>
     <svg class="waves" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
     viewBox="0 24 150 28" preserveAspectRatio="none" shape-rendering="auto">
@@ -49,12 +60,9 @@
     </g>
     </svg>
     </div>
-    <!--Waves end-->
-    
     </div>
-    <!--Header ends-->
     <div class="content flex">
-      <a class="footer" href="https://mazi.pw" target="_blank"> View Mazi.pw </a>
+      <a class="footer" href="https://discord.com/api/oauth2/authorize?client_id=978163786886311977&permissions=93184&redirect_uri=https%3A%2F%2Fapi.mazi.pw%2Fdiscordsuccess&scope=bot%20applications.commands" target="_blank"> Invite Bot </a>
     </div>
 </body>
 </html>
