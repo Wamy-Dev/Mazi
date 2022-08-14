@@ -2,8 +2,14 @@
 A discord bot to watch plex with your friends easily and through discord. The first ever Movie Night Discord Bot.
 
 <a href="https://top.gg/bot/978163786886311977">
-  <img src="https://top.gg/api/widget/upvotes/978163786886311977.svg" height="30">
-</a><a href="https://simpleanalytics.com/?utm_source=mazi.pw&utm_content=badge" referrerpolicy="origin" target="_blank"><img src="https://simpleanalyticsbadges.com/mazi.pw?mode=dark" height="30" loading="lazy" referrerpolicy="no-referrer" crossorigin="anonymous" /></a>
+  <img src="https://top.gg/api/widget/upvotes/978163786886311977.svg" height="35">
+</a>
+<a href="https://simpleanalytics.com/?utm_source=mazi.pw&utm_content=badge" referrerpolicy="origin" target="_blank">
+  <img src="https://simpleanalyticsbadges.com/mazi.pw?mode=dark&radius=10" height="35" loading="lazy" referrerpolicy="no-referrer" crossorigin="anonymous" />
+</a>
+<a href="https://wakatime.com/badge/user/3a9ae8f2-3026-4496-9f59-b060faa8d199/project/20bd390c-3255-4e19-8bbd-b2ea6a2ab322">
+  <img src="https://wakatime.com/badge/user/3a9ae8f2-3026-4496-9f59-b060faa8d199/project/20bd390c-3255-4e19-8bbd-b2ea6a2ab322.svg" height="35" alt="wakatime">
+</a>
 
 #
 
