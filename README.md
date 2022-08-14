@@ -1,6 +1,10 @@
 # Mazi
 A discord bot to watch plex with your friends easily and through discord. The first ever Movie Night Discord Bot.
 
+<a href="https://top.gg/bot/978163786886311977">
+  <img src="https://top.gg/api/widget/upvotes/978163786886311977.svg">
+</a>
+
 <div align="center">
   <img src="/assets/mazilogodark.png#gh-light-mode-only" height="200">
   <img src="/assets/mazilogolight.png#gh-dark-mode-only" height="200">
