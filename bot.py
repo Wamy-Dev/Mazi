@@ -6,8 +6,8 @@
 #      /____//____/                                             
 # directlycrazy.1812
 # Mato.5201
-from re import I
 import discord
+from discord import app_commands
 from discord.ext import commands
 from quart import Quart, render_template
 from decouple import config
@@ -58,6 +58,7 @@ async def index():
         timenow = timeutc[:-7]
         #get full number of servers
         serverstotal = len(servers)
+        servers = serverstotal
         shardcount = client.shard_count
         return await render_template("statuspage.html", latencies=latencies, members=members, servercount=servercount, timenow=timenow, serverstotal=serverstotal, shardcount=shardcount)
     else:
@@ -78,59 +79,75 @@ client.remove_command('help')
 async def on_ready():
     print(f'Bot is ready. Logged in as {client.user}(ID: {client.user.id})')
     print(f'Shards: {client.shard_count}')
-    await client.change_presence(activity = discord.Activity(type = discord.ActivityType.watching, name = ">help"))#sets status as "Watching:!help"
+    await client.change_presence(activity = discord.Activity(type = discord.ActivityType.watching, name = ">help"))
     global ready
     ready = True
+@client.command()
+async def sync(ctx):
+    if ctx.message.author.id == 219545357388873728:
+        await client.tree.sync()
+        await ctx.send("Synced.")
+    else:
+        return None
 @client.command()
 async def eggotyou(ctx):
     await ctx.send('Fine. You got me... screenshot this and send it to me on my discord to have your name put in the source code!', delete_after=5)
     await ctx.message.delete()
-@client.command()
+@client.hybrid_command(name = "project", description = "View the Mazi Github project page.")
 async def project(ctx):
     embed = discord.Embed(title = "Mazi Github", colour = discord.Colour.from_rgb(229,160,13))
     embed.set_author(name = ctx.message.author, icon_url = ctx.author.avatar.url)
     embed.add_field(name = '🔗', value='https://github.com/Wamy-Dev/Mazi', inline = False)
     embed.set_footer(text = "If you like this project please donate using >donate.")
     await ctx.send(embed = embed)
-@client.command()
+@client.hybrid_command(name = "faq", description = "Read the Mazi F.A.Q.")
+async def project(ctx):
+    embed = discord.Embed(title = "Mazi F.A.Q.", colour = discord.Colour.from_rgb(229,160,13))
+    embed.set_author(name = ctx.message.author, icon_url = ctx.author.avatar.url)
+    embed.add_field(name = '🔗', value='https://github.com/Wamy-Dev/Mazi/wiki/FAQ', inline = False)
+    embed.set_footer(text = "If you like this project please donate using >donate.")
+    await ctx.send(embed = embed)
+@client.hybrid_command(name = "website", description = "View the Mazi website.")
 async def website(ctx):
     embed = discord.Embed(title = "Mazi Website", colour = discord.Colour.from_rgb(229,160,13))
     embed.set_author(name = ctx.message.author, icon_url = ctx.author.avatar.url)
     embed.add_field(name = '🔗', value='https://mazi.pw', inline = False)
     embed.set_footer(text = "If you like this project please donate using >donate.")
     await ctx.send(embed = embed)
-@client.command()
+@client.hybrid_command(name = "donate", description = "Doante to the Mazi project.")
 async def donate(ctx):
     embed = discord.Embed(title = "Donate to the project", colour = discord.Colour.from_rgb(229,160,13))
     embed.set_author(name = ctx.message.author, icon_url = ctx.author.avatar.url)
     embed.add_field(name = '🔗', value='https://homeonacloud.com/donate', inline = False)
     embed.set_footer(text = "If you like this project please donate using >donate.")
     await ctx.send(embed = embed)
-@client.command()
+@client.hybrid_command(name = "ping", description = "View the ping between Discord and Mazi.")
 async def ping(ctx):
     txt = str(f"""```css\nIm not too slow right? {round(client.latency * 1000)}ms.```""")
     await ctx.send(txt)
-@client.command()
+@client.hybrid_command(name = "counts", description = "View how many movie nights have been hosted globally.")
 async def counts(ctx):
     counts = doc.get()
     previouscount = counts.to_dict()
     txt = str(f"""```css\nThe bot has hosted movie night {str(previouscount["counts"] - 1)} times.```""")
     await ctx.send(txt)
-@client.command(pass_context = True, aliases = ['Help'])
+@client.hybrid_command(name = "help", description = "Shows the help dialogue.", pass_context = True, aliases = ['Help'])
 async def help(ctx):
     embed = discord.Embed(title = "Here is a command list:", colour= discord.Colour.from_rgb(229,160,13))
     embed.set_author(name = ctx.message.author, icon_url = ctx.author.avatar.url)
     embed.add_field(name = '>host', value='Start a movie session.', inline = False)
     embed.add_field(name = '>join', value='If there is an active session, join it.', inline = False)
     embed.add_field(name = '>movies', value='Get all movies that are available to watch.', inline = False)
-    embed.add_field(name = '>link', value='Link your account to plex.', inline = False)
+    embed.add_field(name = '>link', value='Link your Discord and Plex accounts.', inline = False)
     embed.add_field(name = '>ping', value='Shows the ping between the bot and the user.', inline = False)
     embed.add_field(name = '>project', value='View the project Github.', inline = False)
     embed.add_field(name = '>website', value='View the Mazi website.', inline = False)
     embed.add_field(name = '>donate', value='Donate to the project.', inline = False)
     embed.add_field(name = '>counts', value='See how many times the bot has hosted a movie night globally.', inline = False)
+    embed.add_field(name = '>faq', value='Read the Mazi F.A.Q.', inline = False)
+    embed.set_footer(text = "You can also use slash commands with Mazi!")
     await ctx.send(embed = embed)
-@client.command()
+@client.hybrid_command(name = "link", description = "Link your Plex and Discord accounts.")
 async def link(ctx):
     embed = discord.Embed(title = "Start linking accounts", colour = discord.Colour.from_rgb(229,160,13))
     embed.set_author(name = ctx.message.author, icon_url = ctx.author.avatar.url)
@@ -138,7 +155,7 @@ async def link(ctx):
     embed.set_footer(text = "If you like this project please donate using >donate.")
     await ctx.send(embed = embed)
 #big boy commands
-@client.command()
+@client.hybrid_command(name = "movies", description = "View the all the movies available to watch on your linked Plex account.")
 async def movies(ctx):
     discordid = ctx.message.author.id
     discordid = str(discordid)
@@ -220,7 +237,7 @@ def getMovies(data):
     for video in movies.all():
         list.append(video.title)
     return(list)
-@client.command()
+@client.hybrid_command(name = "host", description = "Host a Plex movie watch together with your friends.")
 async def host(ctx):
     discordid = ctx.message.author.id
     discordid = str(discordid)
@@ -384,7 +401,7 @@ async def host(ctx):
         embed.add_field(name = 'Create an account', value='https://mazi.pw/user', inline = False)
         embed.set_footer(text = "If you like this project please donate using >donate.")
         await ctx.send(embed = embed)
-@client.command()
+@client.hybrid_command(name = "join", description = "Join an active Plex watch together session room.")
 async def join(ctx):
     discordid = ctx.message.author.id
     discordid = str(discordid)
