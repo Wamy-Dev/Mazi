@@ -72,7 +72,6 @@ doc = db.collection(u'counts').document(u'counts')
 #discord
 CLIENTTOKEN = config('CLIENTTOKEN')
 intents = discord.Intents.default()
-intents.message_content = True
 client = commands.AutoShardedBot(command_prefix = '>', intents=intents)
 client.remove_command('help')
 @client.event
@@ -82,17 +81,19 @@ async def on_ready():
     await client.change_presence(activity = discord.Activity(type = discord.ActivityType.watching, name = ">help"))
     global ready
     ready = True
-@client.command()
-async def sync(ctx):
-    if ctx.message.author.id == 219545357388873728:
-        await client.tree.sync()
-        await ctx.send("Synced.")
-    else:
-        return None
-@client.command()
+    await asyncio.sleep(5)
+    await client.tree.sync()
+    print("Tree synced")
+# @client.hybrid_command(name = "sync", description = "Sync")
+# async def sync(ctx):
+#     if ctx.message.author.id == 219545357388873728:
+#         await client.tree.sync()
+#         await ctx.send("Synced.")
+#     else:
+#         return None
+@client.hybrid_command(name = "eggotyou", description = "?")
 async def eggotyou(ctx):
     await ctx.send('Fine. You got me... screenshot this and send it to me on my discord to have your name put in the source code!', delete_after=5)
-    await ctx.message.delete()
 @client.hybrid_command(name = "project", description = "View the Mazi Github project page.")
 async def project(ctx):
     embed = discord.Embed(title = "Mazi Github", colour = discord.Colour.from_rgb(229,160,13))
@@ -133,19 +134,20 @@ async def counts(ctx):
     await ctx.send(txt)
 @client.hybrid_command(name = "help", description = "Shows the help dialogue.", pass_context = True, aliases = ['Help'])
 async def help(ctx):
+    list = ["Now with 100% more help!", "Now with slash commands!", "Cool cats watch movies.", "Runs on Plex and a little love.", "Help support Mazi by running /donate!", "Now showing, your movies!"]
     embed = discord.Embed(title = "Here is a command list:", colour= discord.Colour.from_rgb(229,160,13))
     embed.set_author(name = ctx.message.author, icon_url = ctx.author.avatar.url)
-    embed.add_field(name = '>host', value='Start a movie session.', inline = False)
-    embed.add_field(name = '>join', value='If there is an active session, join it.', inline = False)
-    embed.add_field(name = '>movies', value='Get all movies that are available to watch.', inline = False)
-    embed.add_field(name = '>link', value='Link your Discord and Plex accounts.', inline = False)
-    embed.add_field(name = '>ping', value='Shows the ping between the bot and the user.', inline = False)
-    embed.add_field(name = '>project', value='View the project Github.', inline = False)
-    embed.add_field(name = '>website', value='View the Mazi website.', inline = False)
-    embed.add_field(name = '>donate', value='Donate to the project.', inline = False)
-    embed.add_field(name = '>counts', value='See how many times the bot has hosted a movie night globally.', inline = False)
-    embed.add_field(name = '>faq', value='Read the Mazi F.A.Q.', inline = False)
-    embed.set_footer(text = "You can also use slash commands with Mazi!")
+    embed.add_field(name = '/host', value='Start a movie session.', inline = False)
+    embed.add_field(name = '/join', value='If there is an active session, join it.', inline = False)
+    embed.add_field(name = '/movies', value='Get all movies that are available to watch.', inline = False)
+    embed.add_field(name = '/link', value='Link your Discord and Plex accounts.', inline = False)
+    embed.add_field(name = '/ping', value='Shows the ping between the bot and the user.', inline = False)
+    embed.add_field(name = '/project', value='View the project Github.', inline = False)
+    embed.add_field(name = '/website', value='View the Mazi website.', inline = False)
+    embed.add_field(name = '/donate', value='Donate to the project.', inline = False)
+    embed.add_field(name = '/counts', value='See how many times the bot has hosted a movie night globally.', inline = False)
+    embed.add_field(name = '/faq', value='Read the Mazi F.A.Q.', inline = False)
+    embed.set_footer(text = random.choice(list))
     await ctx.send(embed = embed)
 @client.hybrid_command(name = "link", description = "Link your Plex and Discord accounts.")
 async def link(ctx):
@@ -238,7 +240,8 @@ def getMovies(data):
         list.append(video.title)
     return(list)
 @client.hybrid_command(name = "host", description = "Host a Plex movie watch together with your friends.")
-async def host(ctx):
+@app_commands.describe(moviechoice = "The exact title of the movie you want to watch.")
+async def host(ctx, moviechoice: str):
     discordid = ctx.message.author.id
     discordid = str(discordid)
     def check(msg):
@@ -265,13 +268,6 @@ async def host(ctx):
                 break
             if plexstatus & discordstatus & serverurl:
                 #ask what movie to watch and get rating key from it.
-                try:
-                    embed = discord.Embed(title = "What movie would you like to host?", colour = discord.Colour.from_rgb(229,160,13))
-                    embed.set_author(name = ctx.message.author, icon_url = ctx.author.avatar.url)
-                    embed.set_footer(text = "Please send exact title.")
-                    await ctx.send(embed = embed)
-                    message = await client.wait_for('message', check=check, timeout=30)
-                    moviechoice = message.content
                     try:
                         try:
                             encrypted = data["plexauth"]
@@ -386,8 +382,6 @@ async def host(ctx):
                             await ctx.send('```❌ Something went wrong and the movie couldnt get a room set up. Error 238. Please try again, or report this using ">project"```')
                     except:
                         await ctx.send('```❌ Movie not found in your library. Please check spelling or run ">movies" to view all of your movies.```')
-                except asyncio.TimeoutError:
-                    await ctx.send('```❌ Timed out.```')
         if empty:
             embed = discord.Embed(title = "No account found!", colour = discord.Colour.from_rgb(229,160,13))
             embed.set_author(name = ctx.message.author, icon_url = ctx.author.avatar.url)
@@ -487,3 +481,4 @@ class async_discord_thread(Thread):
         self.loop.run_forever()
 discord_thread = async_discord_thread()
 app.run(host="0.0.0.0", port="5001")
+# client.run(CLIENTTOKEN)
