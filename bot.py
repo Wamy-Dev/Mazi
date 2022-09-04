@@ -78,49 +78,38 @@ client.remove_command('help')
 async def on_ready():
     print(f'Bot is ready. Logged in as {client.user}(ID: {client.user.id})')
     print(f'Shards: {client.shard_count}')
-    await client.change_presence(activity = discord.Activity(type = discord.ActivityType.watching, name = ">help"))
+    await client.change_presence(activity = discord.Activity(type = discord.ActivityType.watching, name = "/help"))
     global ready
     ready = True
     await asyncio.sleep(5)
     await client.tree.sync()
     print("Tree synced")
-# @client.hybrid_command(name = "sync", description = "Sync")
-# async def sync(ctx):
-#     if ctx.message.author.id == 219545357388873728:
-#         await client.tree.sync()
-#         await ctx.send("Synced.")
-#     else:
-#         return None
 @client.hybrid_command(name = "eggotyou", description = "?")
 async def eggotyou(ctx):
-    await ctx.send('Fine. You got me... screenshot this and send it to me on my discord to have your name put in the source code!', delete_after=5)
+    await ctx.send('Fine. You got me... screenshot this and send it to me on my Discord server to have your name put in the source code!', delete_after=5)
 @client.hybrid_command(name = "project", description = "View the Mazi Github project page.")
 async def project(ctx):
     embed = discord.Embed(title = "Mazi Github", colour = discord.Colour.from_rgb(229,160,13))
     embed.set_author(name = ctx.message.author, icon_url = ctx.author.avatar.url)
     embed.add_field(name = '🔗', value='https://github.com/Wamy-Dev/Mazi', inline = False)
-    embed.set_footer(text = "If you like this project please donate using >donate.")
     await ctx.send(embed = embed)
 @client.hybrid_command(name = "faq", description = "Read the Mazi F.A.Q.")
 async def project(ctx):
     embed = discord.Embed(title = "Mazi F.A.Q.", colour = discord.Colour.from_rgb(229,160,13))
     embed.set_author(name = ctx.message.author, icon_url = ctx.author.avatar.url)
     embed.add_field(name = '🔗', value='https://github.com/Wamy-Dev/Mazi/wiki/FAQ', inline = False)
-    embed.set_footer(text = "If you like this project please donate using >donate.")
     await ctx.send(embed = embed)
 @client.hybrid_command(name = "website", description = "View the Mazi website.")
 async def website(ctx):
     embed = discord.Embed(title = "Mazi Website", colour = discord.Colour.from_rgb(229,160,13))
     embed.set_author(name = ctx.message.author, icon_url = ctx.author.avatar.url)
     embed.add_field(name = '🔗', value='https://mazi.pw', inline = False)
-    embed.set_footer(text = "If you like this project please donate using >donate.")
     await ctx.send(embed = embed)
 @client.hybrid_command(name = "donate", description = "Doante to the Mazi project.")
 async def donate(ctx):
     embed = discord.Embed(title = "Donate to the project", colour = discord.Colour.from_rgb(229,160,13))
     embed.set_author(name = ctx.message.author, icon_url = ctx.author.avatar.url)
     embed.add_field(name = '🔗', value='https://homeonacloud.com/donate', inline = False)
-    embed.set_footer(text = "If you like this project please donate using >donate.")
     await ctx.send(embed = embed)
 @client.hybrid_command(name = "ping", description = "View the ping between Discord and Mazi.")
 async def ping(ctx):
@@ -154,7 +143,6 @@ async def link(ctx):
     embed = discord.Embed(title = "Start linking accounts", colour = discord.Colour.from_rgb(229,160,13))
     embed.set_author(name = ctx.message.author, icon_url = ctx.author.avatar.url)
     embed.add_field(name = '🔗', value='https://mazi.pw/user', inline = False)
-    embed.set_footer(text = "If you like this project please donate using >donate.")
     await ctx.send(embed = embed)
 #big boy commands
 @client.hybrid_command(name = "movies", description = "View the all the movies available to watch on your linked Plex account.")
@@ -205,20 +193,17 @@ async def movies(ctx):
                     embed.set_author(name = ctx.message.author, icon_url = ctx.author.avatar.url)
                     embed.add_field(name = 'Edit server info', value='https://mazi.pw/user', inline = False)
                     embed.add_field(name = 'Why?', value='[Read the FAQ](https://github.com/Wamy-Dev/Mazi/wiki/FAQ#the-bot-says-you-server-is-inaccessible-but-i-can-access-it-just-fine-why)', inline = False)
-                    embed.set_footer(text = "If you like this project please donate using >donate.")
                     await ctx.send(embed = embed)
         if empty:
             embed = discord.Embed(title = "No account found!", colour = discord.Colour.from_rgb(229,160,13))
             embed.set_author(name = ctx.message.author, icon_url = ctx.author.avatar.url)
             embed.add_field(name = 'Create an account', value='https://mazi.pw/user', inline = False)
-            embed.set_footer(text = "If you like this project please donate using >donate.")
             await ctx.send(embed = embed)
     except Exception as e:
         print(e) 
         embed = discord.Embed(title = "No account found!", colour = discord.Colour.from_rgb(229,160,13))
         embed.set_author(name = ctx.message.author, icon_url = ctx.author.avatar.url)
         embed.add_field(name = 'Create an account', value='https://mazi.pw/user', inline = False)
-        embed.set_footer(text = "If you like this project please donate using >donate.")
         await ctx.send(embed = embed)
 def getMovies(data):
     #first login
@@ -283,7 +268,6 @@ async def host(ctx, moviechoice: str):
                             embed.set_author(name = ctx.message.author, icon_url = ctx.author.avatar.url)
                             embed.add_field(name = 'Edit server info', value='https://mazi.pw/user', inline = False)
                             embed.add_field(name = 'Why?', value='[Read the FAQ](https://github.com/Wamy-Dev/Mazi/wiki/FAQ#the-bot-says-you-server-is-inaccessible-but-i-can-access-it-just-fine-why)', inline = False)
-                            embed.set_footer(text = "If you like this project please donate using >donate.")
                             await ctx.send(embed = embed)
                             break
                         token = plex._token
@@ -332,11 +316,11 @@ async def host(ctx, moviechoice: str):
                                     print('Adding count failed')
                             except Exception as e:
                                 print(e)
-                                await ctx.send('```❌ Something went wrong and the movie couldnt get a room set up. Error 280. Please try again, or report this using ">project"```')
+                                await ctx.send('```❌ Something went wrong and the movie couldnt get a room set up. Error 280. Please try again, or report this using "/project"```')
                             embed = discord.Embed(title = f"{roomname} is now open to join!", colour = discord.Colour.from_rgb(229,160,13))
                             embed.set_author(name = ctx.message.author, icon_url = ctx.author.avatar.url)
                             embed.add_field(name = 'Movie', value=f"We are watching {movie.title}!", inline = False)
-                            embed.add_field(name = 'Join Now', value="The room is now open to join! Run >join to join. Make sure you have linked your Plex and Discord accounts.", inline = False)
+                            embed.add_field(name = 'Join Now', value="The room is now open to join! Run /join to join. Make sure you have linked your Plex and Discord accounts.", inline = False)
                             embed.set_footer(text = "Room joining closes in 5 minutes.")
                             await ctx.send(embed = embed)
                             await asyncio.sleep(300)
@@ -375,25 +359,23 @@ async def host(ctx, moviechoice: str):
                                     roomstart = requests.post(url, json = obj)
                                     await ctx.send(f"```{roomname} has now started watching {movie.title}!```")
                                 except:
-                                    await ctx.send('```❌ Something went wrong and the movie couldnt get a room set up. Error 316. Please try again, or report this using ">project"```')
+                                    await ctx.send('```❌ Something went wrong and the movie couldnt get a room set up. Error 316. Please try again, or report this using "/project"```')
                             except: 
-                                await ctx.send('```❌ Something went wrong and the movie couldnt get a room set up. Error 289. Please try again, or report this using ">project"```')
+                                await ctx.send('```❌ Something went wrong and the movie couldnt get a room set up. Error 289. Please try again, or report this using "/project"```')
                         except:
-                            await ctx.send('```❌ Something went wrong and the movie couldnt get a room set up. Error 238. Please try again, or report this using ">project"```')
+                            await ctx.send('```❌ Something went wrong and the movie couldnt get a room set up. Error 238. Please try again, or report this using "/project"```')
                     except:
                         await ctx.send('```❌ Movie not found in your library. Please check spelling or run ">movies" to view all of your movies.```')
         if empty:
             embed = discord.Embed(title = "No account found!", colour = discord.Colour.from_rgb(229,160,13))
             embed.set_author(name = ctx.message.author, icon_url = ctx.author.avatar.url)
             embed.add_field(name = 'Create an account', value='https://mazi.pw/user', inline = False)
-            embed.set_footer(text = "If you like this project please donate using >donate.")
             await ctx.send(embed = embed)
     except Exception as e:
         print(e) 
         embed = discord.Embed(title = "No account found!", colour = discord.Colour.from_rgb(229,160,13))
         embed.set_author(name = ctx.message.author, icon_url = ctx.author.avatar.url)
         embed.add_field(name = 'Create an account', value='https://mazi.pw/user', inline = False)
-        embed.set_footer(text = "If you like this project please donate using >donate.")
         await ctx.send(embed = embed)
 @client.hybrid_command(name = "join", description = "Join an active Plex watch together session room.")
 async def join(ctx):
@@ -459,13 +441,11 @@ async def join(ctx):
             embed = discord.Embed(title = "No account found!", colour = discord.Colour.from_rgb(229,160,13))
             embed.set_author(name = ctx.message.author, icon_url = ctx.author.avatar.url)
             embed.add_field(name = 'Create an account', value='https://mazi.pw/user', inline = False)
-            embed.set_footer(text = "If you like this project please donate using >donate.")
             await ctx.send(embed = embed)
     except Exception as e:
         embed = discord.Embed(title = "No account found!", colour = discord.Colour.from_rgb(229,160,13))
         embed.set_author(name = ctx.message.author, icon_url = ctx.author.avatar.url)
         embed.add_field(name = 'Create an account', value='https://mazi.pw/user', inline = False)
-        embed.set_footer(text = "If you like this project please donate using >donate.")
         await ctx.send(embed = embed)
 class async_discord_thread(Thread):
     #thanks @FrankWhoee for this code snippet
