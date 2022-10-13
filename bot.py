@@ -174,18 +174,18 @@ async def movies(ctx):
                     moviefields = []
                     for movie in getMovies(data):
                         moviefields.append(movie)
-                    movies = ""
+                    movieslist = ""
                     for items in moviefields:
-                        movies += f'{items}\n'
+                        movieslist += f'{items}\n'
                     #math
                     if len(moviefields) == 0:
                         await ctx.send("```❌ No movies in Plex Movie library.```")
                     if len(moviefields) > 0:
-                        embed = discord.Embed(title = "Available Plex Movies", description=movies, colour = discord.Colour.from_rgb(229,160,13))
+                        embed = discord.Embed(title = "Available Plex Movies", description=movieslist, colour = discord.Colour.from_rgb(229,160,13))
                         embed.set_author(name = ctx.message.author, icon_url = ctx.author.avatar.url)
                         embed.set_footer(text = f"{ctx.message.author}'s movies")
                         await ctx.send(embed = embed)
-                    if len(movies) > 4096:
+                    if len(movieslist) > 4096:
                         await ctx.send("```❌ You have too many movies to display.```")
                 except Exception as e:
                     print(e)
@@ -206,20 +206,33 @@ async def movies(ctx):
         embed.add_field(name = 'Create an account', value='https://mazi.pw/user', inline = False)
         await ctx.send(embed = embed)
 def getMovies(data):
-    #first login
     try:
-        #convert from aes
-        encrypted = data["plexauth"]
-        secret_key = config('AESKEY')
-        encrypted = encrypted.split(':')
-        nonce = b64decode(encrypted[0])
-        encrypted = b64decode(encrypted[1])
-        box = SecretBox(bytes(secret_key, encoding='utf8'))
-        plexauth = box.decrypt(encrypted, nonce).decode('utf-8')
-        plex = PlexServer(data["plexserverurl"], plexauth, timeout=5)
-        movies = plex.library.section('Movies')
-    except Exception as e:
-        print(e)
+        try:
+            encrypted = data["plexauth"]
+            secret_key = config('AESKEY')
+            encrypted = encrypted.split(':')
+            nonce = b64decode(encrypted[0])
+            encrypted = b64decode(encrypted[1])
+            box = SecretBox(bytes(secret_key, encoding='utf8'))
+            plexauth = box.decrypt(encrypted, nonce).decode('utf-8')
+            plex = PlexServer(data["plexserverurl"], plexauth, timeout=5)
+            movies = plex.library.section('Movies')
+        except:
+            if data["plexserverurl"].startswith("https://"):
+                serverurl = data["plexserverurl"].replace("https://", "http://")
+            else:
+                serverurl = data["plexserverurl"].replace("http://", "https://")
+            encrypted = data["plexauth"]
+            secret_key = config('AESKEY')
+            encrypted = encrypted.split(':')
+            nonce = b64decode(encrypted[0])
+            encrypted = b64decode(encrypted[1])
+            box = SecretBox(bytes(secret_key, encoding='utf8'))
+            plexauth = box.decrypt(encrypted, nonce).decode('utf-8')
+            plex = PlexServer(serverurl, plexauth, timeout=5)
+            movies = plex.library.section('Movies')
+    except:
+        return None
     list = []
     for video in movies.all():
         list.append(video.title)
@@ -255,21 +268,43 @@ async def host(ctx, moviechoice: str):
                 #ask what movie to watch and get rating key from it.
                     try:
                         try:
-                            encrypted = data["plexauth"]
-                            secret_key = config('AESKEY')
-                            encrypted = encrypted.split(':')
-                            nonce = b64decode(encrypted[0])
-                            encrypted = b64decode(encrypted[1])
-                            box = SecretBox(bytes(secret_key, encoding='utf8'))
-                            plexauth = box.decrypt(encrypted, nonce).decode('utf-8')
-                            plex = PlexServer(data["plexserverurl"], plexauth, timeout=5)
+                            try:
+                                encrypted = data["plexauth"]
+                                secret_key = config('AESKEY')
+                                encrypted = encrypted.split(':')
+                                nonce = b64decode(encrypted[0])
+                                encrypted = b64decode(encrypted[1])
+                                box = SecretBox(bytes(secret_key, encoding='utf8'))
+                                plexauth = box.decrypt(encrypted, nonce).decode('utf-8')
+                                plex = PlexServer(data["plexserverurl"], plexauth, timeout=5)
+                            except:
+                                embed = discord.Embed(title = "Your Plex Server is not accessible!", colour = discord.Colour.from_rgb(229,160,13))
+                                embed.set_author(name = ctx.message.author, icon_url = ctx.author.avatar.url)
+                                embed.add_field(name = 'Edit server info', value='https://mazi.pw/user', inline = False)
+                                embed.add_field(name = 'Why?', value='[Read the FAQ](https://github.com/Wamy-Dev/Mazi/wiki/FAQ#the-bot-says-you-server-is-inaccessible-but-i-can-access-it-just-fine-why)', inline = False)
+                                await ctx.send(embed = embed)
+                                break
                         except:
-                            embed = discord.Embed(title = "Your Plex Server is not accessible!", colour = discord.Colour.from_rgb(229,160,13))
-                            embed.set_author(name = ctx.message.author, icon_url = ctx.author.avatar.url)
-                            embed.add_field(name = 'Edit server info', value='https://mazi.pw/user', inline = False)
-                            embed.add_field(name = 'Why?', value='[Read the FAQ](https://github.com/Wamy-Dev/Mazi/wiki/FAQ#the-bot-says-you-server-is-inaccessible-but-i-can-access-it-just-fine-why)', inline = False)
-                            await ctx.send(embed = embed)
-                            break
+                            try:
+                                if data["plexserverurl"].startswith("https://"):
+                                    serverurl = data["plexserverurl"].replace("https://", "http://")
+                                else:
+                                    serverurl = data["plexserverurl"].replace("http://", "https://")
+                                encrypted = data["plexauth"]
+                                secret_key = config('AESKEY')
+                                encrypted = encrypted.split(':')
+                                nonce = b64decode(encrypted[0])
+                                encrypted = b64decode(encrypted[1])
+                                box = SecretBox(bytes(secret_key, encoding='utf8'))
+                                plexauth = box.decrypt(encrypted, nonce).decode('utf-8')
+                                plex = PlexServer(data["plexserverurl"], plexauth, timeout=5)
+                            except:
+                                embed = discord.Embed(title = "Your Plex Server is not accessible!", colour = discord.Colour.from_rgb(229,160,13))
+                                embed.set_author(name = ctx.message.author, icon_url = ctx.author.avatar.url)
+                                embed.add_field(name = 'Edit server info', value='https://mazi.pw/user', inline = False)
+                                embed.add_field(name = 'Why?', value='[Read the FAQ](https://github.com/Wamy-Dev/Mazi/wiki/FAQ#the-bot-says-you-server-is-inaccessible-but-i-can-access-it-just-fine-why)', inline = False)
+                                await ctx.send(embed = embed)
+                                break
                         token = plex._token
                         machineid = plex.machineIdentifier
                         movie= plex.library.section('Movies').get(moviechoice)
@@ -365,7 +400,7 @@ async def host(ctx, moviechoice: str):
                         except:
                             await ctx.send('```❌ Something went wrong and the movie couldnt get a room set up. Error 238. Please try again, or report this using "/project"```')
                     except:
-                        await ctx.send('```❌ Movie not found in your library. Please check spelling or run ">movies" to view all of your movies.```')
+                        await ctx.send('```❌ Movie not found in your library. Please check spelling or run "/movies" to view all of your movies.```')
         if empty:
             embed = discord.Embed(title = "No account found!", colour = discord.Colour.from_rgb(229,160,13))
             embed.set_author(name = ctx.message.author, icon_url = ctx.author.avatar.url)
@@ -461,4 +496,3 @@ class async_discord_thread(Thread):
         self.loop.run_forever()
 discord_thread = async_discord_thread()
 app.run(host="0.0.0.0", port="5001")
-# client.run(CLIENTTOKEN)
