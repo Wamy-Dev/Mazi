@@ -215,7 +215,7 @@ def getMovies(data):
             encrypted = b64decode(encrypted[1])
             box = SecretBox(bytes(secret_key, encoding='utf8'))
             plexauth = box.decrypt(encrypted, nonce).decode('utf-8')
-            plex = PlexServer(data["plexserverurl"], plexauth, timeout=5)
+            plex = PlexServer(data["plexserverurl"], plexauth)
             movies = plex.library.section('Movies')
         except:
             if data["plexserverurl"].startswith("https://"):
@@ -229,7 +229,7 @@ def getMovies(data):
             encrypted = b64decode(encrypted[1])
             box = SecretBox(bytes(secret_key, encoding='utf8'))
             plexauth = box.decrypt(encrypted, nonce).decode('utf-8')
-            plex = PlexServer(serverurl, plexauth, timeout=5)
+            plex = PlexServer(serverurl, plexauth)
             movies = plex.library.section('Movies')
     except:
         return None
@@ -276,7 +276,7 @@ async def host(ctx, moviechoice: str):
                                 encrypted = b64decode(encrypted[1])
                                 box = SecretBox(bytes(secret_key, encoding='utf8'))
                                 plexauth = box.decrypt(encrypted, nonce).decode('utf-8')
-                                plex = PlexServer(data["plexserverurl"], plexauth, timeout=5)
+                                plex = PlexServer(data["plexserverurl"], plexauth)
                             except:
                                 embed = discord.Embed(title = "Your Plex Server is not accessible!", colour = discord.Colour.from_rgb(229,160,13))
                                 embed.set_author(name = ctx.message.author, icon_url = ctx.author.avatar.url)
@@ -482,17 +482,18 @@ async def join(ctx):
         embed.set_author(name = ctx.message.author, icon_url = ctx.author.avatar.url)
         embed.add_field(name = 'Create an account', value='https://mazi.pw/user', inline = False)
         await ctx.send(embed = embed)
-class async_discord_thread(Thread):
-    #thanks @FrankWhoee for this code snippet
-    def __init__(self):
-        Thread.__init__(self)
-        self.loop = asyncio.get_event_loop()
-        self.start()
-    async def starter(self):
-        await client.start(CLIENTTOKEN)
-    def run(self):
-        self.name = 'Discord.py'
-        self.loop.create_task(self.starter())
-        self.loop.run_forever()
-discord_thread = async_discord_thread()
-app.run(host="0.0.0.0", port="5001")
+# class async_discord_thread(Thread):
+#     #thanks @FrankWhoee for this code snippet
+#     def __init__(self):
+#         Thread.__init__(self)
+#         self.loop = asyncio.get_event_loop()
+#         self.start()
+#     async def starter(self):
+#         await client.start(CLIENTTOKEN)
+#     def run(self):
+#         self.name = 'Discord.py'
+#         self.loop.create_task(self.starter())
+#         self.loop.run_forever()
+# discord_thread = async_discord_thread()
+# app.run(host="0.0.0.0", port="5001")
+client.run(CLIENTTOKEN)
