@@ -7,7 +7,6 @@
 # directlycrazy.1812
 # Mato.5201
 import requests 
-import traceback
 session = requests.Session()
 session.verify = False
 import discord
@@ -74,7 +73,7 @@ db = firestore.client()
 #counts
 doc = db.collection(u'counts').document(u'counts')
 #discord
-CLIENTTOKEN = config('CLIENTTOKENT')
+CLIENTTOKEN = config('CLIENTTOKEN')
 intents = discord.Intents.default()
 client = commands.AutoShardedBot(command_prefix = '>', intents=intents)
 client.remove_command('help')
@@ -332,7 +331,7 @@ async def host(interaction: discord.Interaction, moviechoice: str):
                             embed.add_field(name = 'Join Now', value="The room is now open to join! Run /join to join. Make sure you have linked your Plex and Discord accounts.", inline = False)
                             embed.set_footer(text = "Room joining closes in 5 minutes.")
                             await interaction.followup.send(embed = embed)
-                            await asyncio.sleep(5)
+                            await asyncio.sleep(300)
                             #start room
                             try:
                                 #get users from room
@@ -364,7 +363,7 @@ async def host(interaction: discord.Interaction, moviechoice: str):
                                 try:
                                     db.collection(u'rooms').document(roomname).delete()
                                     await interaction.followup.send(f"```Joining for {roomname} is closed. Open Plex on any device and accept the friend request if you are not already friends with the hoster. Then in 5 minutes, join the Watch Together session. {movie.title.capitalize()} will begin shortly.```")
-                                    await asyncio.sleep(5)
+                                    await asyncio.sleep(300)
                                     roomstart = requests.post(url, json = obj)
                                     await interaction.followup.send(f"```{roomname} has now started watching {movie.title}!```")
                                 except:
@@ -456,18 +455,17 @@ async def join(ctx):
         embed.set_author(name = ctx.message.author, icon_url = ctx.author.avatar.url)
         embed.add_field(name = 'Create an account', value='https://mazi.pw/user', inline = False)
         await ctx.send(embed = embed)
-# class async_discord_thread(Thread):
-#     #thanks @FrankWhoee for this code snippet
-#     def __init__(self):
-#         Thread.__init__(self)
-#         self.loop = asyncio.get_event_loop()
-#         self.start()
-#     async def starter(self):
-#         await client.start(CLIENTTOKEN)
-#     def run(self):
-#         self.name = 'Discord.py'
-#         self.loop.create_task(self.starter())
-#         self.loop.run_forever()
-# discord_thread = async_discord_thread()
-# app.run(host="0.0.0.0", port="5001")
-client.run(CLIENTTOKEN)
+class async_discord_thread(Thread):
+    #thanks @FrankWhoee for this code snippet
+    def __init__(self):
+        Thread.__init__(self)
+        self.loop = asyncio.get_event_loop()
+        self.start()
+    async def starter(self):
+        await client.start(CLIENTTOKEN)
+    def run(self):
+        self.name = 'Discord.py'
+        self.loop.create_task(self.starter())
+        self.loop.run_forever()
+discord_thread = async_discord_thread()
+app.run(host="0.0.0.0", port="5001")
