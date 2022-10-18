@@ -28,7 +28,7 @@ Here you can link your accounts so you can use the Mazi Bot. Accounts are requir
 # How does this work?
 1. First sign up for an account at [Mazi.pw](https://mazi.pw/user).
 2. Link both your Discord and Plex accounts to it. If you are hosting Watch Together Sessions, make sure to add your public server url. This can be an ip or a url to your server. Make sure it is valid before submitting!
-3. If you are hosting, use `>host` to begin a session. It will make a session, and will wait 5 minutes for people to join the room. If you are joining, use `>join` to join a joinable room. Make sure you are in the same channel as where the room was started.
+3. If you are hosting, use `/host` to begin a session. It will make a session, and will wait 5 minutes for people to join the room. If you are joining, use `/join` to join a joinable room. Make sure you are in the same channel as where the room was started.
 4. After the 5 minutes has passed, the room will close and requests will go out to users who are not already friends with the hoster on Plex with a grace period of 5 minutes. After those 5 minutes, all users who have joined need to now open up Plex on any device, and join the Watch Together session.
 5. Get your popcorn and drinks ready, cause the movie is starting!
 
