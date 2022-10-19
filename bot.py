@@ -168,6 +168,14 @@ async def movies(interaction: discord.Interaction):
                 if len(serverurl)>0 and len(serverlibrary)>0:
                     serverurl = True
                     serverlibrary = True
+                else:
+                    embed = discord.Embed(title = "You haven't provided all information!", colour = discord.Colour.from_rgb(229,160,13))
+                    embed.set_author(name = interaction.user, icon_url = interaction.user.avatar.url)
+                    embed.description("You may be missing either your serverURL or your serverLibrary. Please add them using the link.")
+                    embed.add_field(name = 'Add information', value='https://mazi.pw/user', inline = False)
+                    embed.set_footer(text = "If you want to host you need all information.")
+                    await interaction.followup.send(embed = embed)
+                    break
             except:
                 embed = discord.Embed(title = "You haven't provided all information!", colour = discord.Colour.from_rgb(229,160,13))
                 embed.set_author(name = interaction.user, icon_url = interaction.user.avatar.url)
@@ -176,7 +184,7 @@ async def movies(interaction: discord.Interaction):
                 embed.set_footer(text = "If you want to host you need all information.")
                 await interaction.followup.send(embed = embed)
                 break
-            if plexstatus & discordstatus & serverurl:
+            if plexstatus & discordstatus & serverurl & serverlibrary:
                 try:
                     moviefields = []
                     for movie in getMovies(data):
@@ -189,9 +197,9 @@ async def movies(interaction: discord.Interaction):
                     if len(movieslist) > 4096:
                         await interaction.followup.send("```❌ You have too many movies to display.```")
                     if len(movieslist) < 4096:
-                        embed = discord.Embed(title = "Available Plex Movies", description=movieslist, colour = discord.Colour.from_rgb(229,160,13))
+                        embed = discord.Embed(title = f"Available items in {serverlibrary}", description=movieslist, colour = discord.Colour.from_rgb(229,160,13))
                         embed.set_author(name = interaction.user, icon_url = interaction.user.avatar.url)
-                        embed.set_footer(text = f"{interaction.user}'s movies")
+                        embed.set_footer(text = f"{interaction.user}'s {serverlibrary}")
                         await interaction.followup.send(embed = embed)
                 except Exception as e:
                     print(e)
@@ -200,6 +208,13 @@ async def movies(interaction: discord.Interaction):
                     embed.add_field(name = 'Edit server info', value='https://mazi.pw/user', inline = False)
                     embed.add_field(name = 'Why?', value='[Read the FAQ](https://github.com/Wamy-Dev/Mazi/wiki/FAQ#the-bot-says-you-server-is-inaccessible-but-i-can-access-it-just-fine-why)', inline = False)
                     await interaction.followup.send(embed = embed)
+            else:
+                embed = discord.Embed(title = "You haven't provided all information!", colour = discord.Colour.from_rgb(229,160,13))
+                embed.set_author(name = interaction.user, icon_url = interaction.user.avatar.url)
+                embed.description("You may be missing either your serverURL or your serverLibrary. Please add them using the link.")
+                embed.add_field(name = 'Add information', value='https://mazi.pw/user', inline = False)
+                embed.set_footer(text = "If you want to host you need all information.")
+                await interaction.followup.send(embed = embed)
         if empty:
             embed = discord.Embed(title = "No account found!", colour = discord.Colour.from_rgb(229,160,13))
             embed.set_author(name = interaction.user, icon_url = interaction.user.avatar.url)
@@ -251,14 +266,22 @@ async def host(interaction: discord.Interaction, moviechoice: str):
                 serverlibrary = data["plexserverlibrary"]
                 if len(serverurl)>0 and len(serverlibrary)>0:
                     serverurl = True
+                    serverlibrary = True
+                else:
+                    embed = discord.Embed(title = "You haven't provided all information!", colour = discord.Colour.from_rgb(229,160,13))
+                    embed.set_author(name = interaction.user, icon_url = interaction.user.avatar.url)
+                    embed.add_field(name = 'Add information', value='https://mazi.pw/user', inline = False)
+                    embed.set_footer(text = "If you want to host you need all information.")
+                    await interaction.followup.send(embed = embed)
+                    break
             except:
                 embed = discord.Embed(title = "You haven't provided all information!", colour = discord.Colour.from_rgb(229,160,13))
                 embed.set_author(name = interaction.user, icon_url = interaction.user.avatar.url)
-                embed.add_field(name = 'Link accounts', value='https://mazi.pw/user', inline = False)
+                embed.add_field(name = 'Add information', value='https://mazi.pw/user', inline = False)
                 embed.set_footer(text = "If you want to host you need all information.")
                 await interaction.followup.send(embed = embed)
                 break
-            if plexstatus & discordstatus & serverurl:
+            if plexstatus & discordstatus & serverurl & serverlibrary:
                 #ask what movie to watch and get rating key from it.
                     try:
                         try:
@@ -327,7 +350,7 @@ async def host(interaction: discord.Interaction, moviechoice: str):
                                 await interaction.followup.send('```❌ Something went wrong and the movie couldnt get a room set up. Error 280. Please try again, or report this using "/project"```')
                             embed = discord.Embed(title = f"{roomname} is now open to join!", colour = discord.Colour.from_rgb(229,160,13))
                             embed.set_author(name = interaction.user, icon_url = interaction.user.avatar.url)
-                            embed.add_field(name = 'Movie', value=f"We are watching {movie.title}!", inline = False)
+                            embed.add_field(name = f'{data["plexserverlibrary"]}', value=f"We are watching {movie.title}!", inline = False)
                             embed.add_field(name = 'Join Now', value="The room is now open to join! Run /join to join. Make sure you have linked your Plex and Discord accounts.", inline = False)
                             embed.set_footer(text = "Room joining closes in 5 minutes.")
                             await interaction.followup.send(embed = embed)
