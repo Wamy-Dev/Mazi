@@ -165,6 +165,7 @@ async def movies(interaction: discord.Interaction):
                 plexstatus = data["plex"]
                 serverurl = data["plexserverurl"]
                 serverlibrary = data["plexserverlibrary"]
+                libraryname = data["plexserverlibrary"]
                 if len(serverurl)>0 and len(serverlibrary)>0:
                     serverurl = True
                     serverlibrary = True
@@ -197,9 +198,9 @@ async def movies(interaction: discord.Interaction):
                     if len(movieslist) > 4096:
                         await interaction.followup.send("```❌ You have too many movies to display.```")
                     if len(movieslist) < 4096:
-                        embed = discord.Embed(title = f"Available items in {serverlibrary}", description=movieslist, colour = discord.Colour.from_rgb(229,160,13))
+                        embed = discord.Embed(title = f"Available items in {libraryname}", description=movieslist, colour = discord.Colour.from_rgb(229,160,13))
                         embed.set_author(name = interaction.user, icon_url = interaction.user.avatar.url)
-                        embed.set_footer(text = f"{interaction.user}'s {serverlibrary}")
+                        embed.set_footer(text = f"{interaction.user}'s {libraryname}")
                         await interaction.followup.send(embed = embed)
                 except Exception as e:
                     print(e)
