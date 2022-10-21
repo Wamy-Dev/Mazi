@@ -75,7 +75,7 @@ db = firestore.client()
 #counts
 doc = db.collection(u'counts').document(u'counts')
 #discord
-CLIENTTOKEN = config('CLIENTTOKENT')
+CLIENTTOKEN = config('CLIENTTOKEN')
 intents = discord.Intents.default()
 client = commands.AutoShardedBot(command_prefix = '>', intents=intents)
 client.remove_command('help')
