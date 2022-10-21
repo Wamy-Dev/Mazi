@@ -7,8 +7,10 @@
 # directlycrazy.1812
 # Mato.5201
 import requests 
+import urllib3
 session = requests.Session()
 session.verify = False
+urllib3.disable_warnings()
 import discord
 from discord import app_commands
 from discord.ext import commands
@@ -73,7 +75,7 @@ db = firestore.client()
 #counts
 doc = db.collection(u'counts').document(u'counts')
 #discord
-CLIENTTOKEN = config('CLIENTTOKEN')
+CLIENTTOKEN = config('CLIENTTOKENT')
 intents = discord.Intents.default()
 client = commands.AutoShardedBot(command_prefix = '>', intents=intents)
 client.remove_command('help')
@@ -236,7 +238,11 @@ def getMovies(data):
         encrypted = b64decode(encrypted[1])
         box = SecretBox(bytes(secret_key, encoding='utf8'))
         plexauth = box.decrypt(encrypted, nonce).decode('utf-8')
-        plex = PlexServer(data["plexserverurl"], plexauth, session=session)
+        plexurl = data["plexserverurl"]
+        try:
+            plex = PlexServer(f"http://{plexurl}" if not plexurl.startswith("http") or plexurl.startswith("http") else plexurl, plexauth, session=session)
+        except:
+            plex = PlexServer(f"https://{plexurl}" if not plexurl.startswith("http") or plexurl.startswith("https") else plexurl, plexauth, session=session)
         movies = plex.library.section(data["plexserverlibrary"])
     except Exception as e:
         print(e)
@@ -293,7 +299,11 @@ async def host(interaction: discord.Interaction, moviechoice: str):
                             encrypted = b64decode(encrypted[1])
                             box = SecretBox(bytes(secret_key, encoding='utf8'))
                             plexauth = box.decrypt(encrypted, nonce).decode('utf-8')
-                            plex = PlexServer(data["plexserverurl"], plexauth, session=session)
+                            plexurl = data["plexserverurl"]
+                            try:
+                                plex = PlexServer(f"http://{plexurl}" if not plexurl.startswith("http") or plexurl.startswith("http") else plexurl, plexauth, session=session)
+                            except:
+                                plex = PlexServer(f"https://{plexurl}" if not plexurl.startswith("http") or plexurl.startswith("https") else plexurl, plexauth, session=session)
                         except Exception as e:
                             print(e)
                             embed = discord.Embed(title = "Your Plex Server is not accessible!", colour = discord.Colour.from_rgb(229,160,13))
