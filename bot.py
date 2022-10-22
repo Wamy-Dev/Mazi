@@ -8,6 +8,7 @@
 # Mato.5201
 import requests 
 import urllib3
+import logging
 session = requests.Session()
 session.verify = False
 urllib3.disable_warnings()
@@ -30,6 +31,7 @@ from datetime import datetime
 from humanfriendly import format_timespan
 #quart
 app = Quart(__name__)
+logging.getLogger('quart.serving').setLevel(logging.ERROR)
 ready = False
 inittime = datetime.now()
 @app.route("/", methods = ["get"])
