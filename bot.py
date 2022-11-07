@@ -77,7 +77,7 @@ db = firestore.client()
 #counts
 doc = db.collection(u'counts').document(u'counts')
 #discord
-CLIENTTOKEN = config('CLIENTTOKENT')
+CLIENTTOKEN = config('CLIENTTOKEN')
 intents = discord.Intents.default()
 client = commands.AutoShardedBot(command_prefix = '>', intents=intents)
 client.remove_command('help')
@@ -651,18 +651,17 @@ async def join(ctx):
         embed.set_author(name = ctx.message.author, icon_url = ctx.author.avatar.url)
         embed.add_field(name = 'Create an account', value='https://mazi.pw/user', inline = False)
         await ctx.send(embed = embed)
-# class async_discord_thread(Thread):
-#     #thanks @FrankWhoee for this code snippet
-#     def __init__(self):
-#         Thread.__init__(self)
-#         self.loop = asyncio.get_event_loop()
-#         self.start()
-#     async def starter(self):
-#         await client.start(CLIENTTOKEN)
-#     def run(self):
-#         self.name = 'Discord.py'
-#         self.loop.create_task(self.starter())
-#         self.loop.run_forever()
-# discord_thread = async_discord_thread()
-# app.run(host="0.0.0.0", port="5001")
-client.run(CLIENTTOKEN)
+class async_discord_thread(Thread):
+    #thanks @FrankWhoee for this code snippet
+    def __init__(self):
+        Thread.__init__(self)
+        self.loop = asyncio.get_event_loop()
+        self.start()
+    async def starter(self):
+        await client.start(CLIENTTOKEN)
+    def run(self):
+        self.name = 'Discord.py'
+        self.loop.create_task(self.starter())
+        self.loop.run_forever()
+discord_thread = async_discord_thread()
+app.run(host="0.0.0.0", port="5001")
