@@ -77,7 +77,7 @@ db = firestore.client()
 #counts
 doc = db.collection(u'counts').document(u'counts')
 #discord
-CLIENTTOKEN = config('CLIENTTOKEN')
+CLIENTTOKEN = config('CLIENTTOKENT')
 intents = discord.Intents.default()
 client = commands.AutoShardedBot(command_prefix = '>', intents=intents)
 client.remove_command('help')
@@ -152,6 +152,87 @@ async def link(ctx):
     embed.add_field(name = '🔗', value='https://mazi.pw/user', inline = False)
     await ctx.send(embed = embed)
 #big boy commands
+@client.tree.command(name = "search", description = "Search for an item in your Plex library.")
+async def search(interaction: discord.Interaction, search: str):
+    await interaction.response.defer()
+    discordid = interaction.user.id
+    discordid = str(discordid)
+    #get data
+    try:
+        docs = db.collection(u'users').where(u'discordid', u'==', discordid).stream()
+        empty = True
+        for doc in docs:
+            empty = False
+            data = doc.to_dict()
+            try:
+                discordstatus = data["discord"]
+                plexstatus = data["plex"]
+                serverurl = data["plexserverurl"]
+                serverlibrary = data["plexserverlibrary"]
+                libraryname = data["plexserverlibrary"]
+                if len(serverurl)>0 and len(serverlibrary)>0:
+                    serverurl = True
+                    serverlibrary = True
+                else:
+                    embed = discord.Embed(title = "You haven't provided all information!", colour = discord.Colour.from_rgb(229,160,13))
+                    embed.set_author(name = interaction.user, icon_url = interaction.user.avatar.url)
+                    embed.description("You may be missing either your serverURL or your serverLibrary. Please add them using the link.")
+                    embed.add_field(name = 'Add information', value='https://mazi.pw/user', inline = False)
+                    embed.set_footer(text = "If you want to host you need all information.")
+                    await interaction.followup.send(embed = embed)
+                    break
+            except:
+                embed = discord.Embed(title = "You haven't provided all information!", colour = discord.Colour.from_rgb(229,160,13))
+                embed.set_author(name = interaction.user, icon_url = interaction.user.avatar.url)
+                embed.description("You may be missing either your serverURL or your serverLibrary. Please add them using the link.")
+                embed.add_field(name = 'Add information', value='https://mazi.pw/user', inline = False)
+                embed.set_footer(text = "If you want to host you need all information.")
+                await interaction.followup.send(embed = embed)
+                break
+            if plexstatus & discordstatus & serverurl & serverlibrary:
+                try:
+                    #logic
+                    moviefields = []
+                    for movie in searchPlex(data, search):
+                        moviefields.append(movie)
+                    movieslist = ""
+                    for items in moviefields:
+                        movieslist += f'{items}\n'
+                    if len(moviefields) == 0:
+                        embed = discord.Embed(title = "No results found!", description=f"```No results found in {libraryname} when searching for {search}. Please try again later.```", colour = discord.Colour.from_rgb(229,160,13))
+                        embed.set_author(name = interaction.user, icon_url = interaction.user.avatar.url)
+                        embed.set_footer(text = f"{interaction.user}'s {libraryname}")
+                        await interaction.followup.send(embed = embed)
+                    else:
+                        embed = discord.Embed(title = f"Top results in {libraryname}", description=movieslist, colour = discord.Colour.from_rgb(229,160,13))
+                        embed.set_author(name = interaction.user, icon_url = interaction.user.avatar.url)
+                        embed.set_footer(text = f"{interaction.user}'s {libraryname}")
+                        await interaction.followup.send(embed = embed)
+                except Exception as e:
+                    print(e)
+                    embed = discord.Embed(title = "Your Plex Server is not accessible!", colour = discord.Colour.from_rgb(229,160,13))
+                    embed.set_author(name = interaction.user, icon_url = interaction.user.avatar.url)
+                    embed.add_field(name = 'Edit server info', value='https://mazi.pw/user', inline = False)
+                    embed.add_field(name = 'Why?', value='[Read the FAQ](https://github.com/Wamy-Dev/Mazi/wiki/FAQ#the-bot-says-you-server-is-inaccessible-but-i-can-access-it-just-fine-why)', inline = False)
+                    await interaction.followup.send(embed = embed)
+            else:
+                embed = discord.Embed(title = "You haven't provided all information!", colour = discord.Colour.from_rgb(229,160,13))
+                embed.set_author(name = interaction.user, icon_url = interaction.user.avatar.url)
+                embed.description("You may be missing either your serverURL or your serverLibrary. Please add them using the link.")
+                embed.add_field(name = 'Add information', value='https://mazi.pw/user', inline = False)
+                embed.set_footer(text = "If you want to host you need all information.")
+                await interaction.followup.send(embed = embed)
+        if empty:
+            embed = discord.Embed(title = "No account found!", colour = discord.Colour.from_rgb(229,160,13))
+            embed.set_author(name = interaction.user, icon_url = interaction.user.avatar.url)
+            embed.add_field(name = 'Create an account', value='https://mazi.pw/user', inline = False)
+            await interaction.followup.send(embed = embed)
+    except Exception as e:
+        print(e) 
+        embed = discord.Embed(title = "No account found!", colour = discord.Colour.from_rgb(229,160,13))
+        embed.set_author(name = interaction.user, icon_url = interaction.user.avatar.url)
+        embed.add_field(name = 'Create an account', value='https://mazi.pw/user', inline = False)
+        await interaction.followup.send(embed = embed)
 @client.tree.command(name = "movies", description = "View the all the movies available to watch on your linked Plex account.")
 async def movies(interaction: discord.Interaction):
     await interaction.response.defer()
@@ -200,7 +281,16 @@ async def movies(interaction: discord.Interaction):
                     if len(movieslist) == 0:
                         await interaction.followup.send("```❌ No movies in Plex Movie library.```")
                     if len(movieslist) > 4096:
-                        await interaction.followup.send("```❌ You have too many movies to display.```")
+                        moviefields = []
+                        for movie in getMovies(data):
+                            moviefields.append(movie)
+                        movieslist = ""
+                        for items in moviefields:
+                            movieslist += f'{items}\n'
+                        embed = discord.Embed(title = f"Recently added in {libraryname}", description=movieslist, colour = discord.Colour.from_rgb(229,160,13))
+                        embed.set_author(name = interaction.user, icon_url = interaction.user.avatar.url)
+                        embed.set_footer(text = "Mazi couldn't show all items so it is showing the most recently added.")
+                        await interaction.followup.send(embed = embed)
                     if len(movieslist) < 4096:
                         embed = discord.Embed(title = f"Available items in {libraryname}", description=movieslist, colour = discord.Colour.from_rgb(229,160,13))
                         embed.set_author(name = interaction.user, icon_url = interaction.user.avatar.url)
@@ -231,6 +321,60 @@ async def movies(interaction: discord.Interaction):
         embed.set_author(name = interaction.user, icon_url = interaction.user.avatar.url)
         embed.add_field(name = 'Create an account', value='https://mazi.pw/user', inline = False)
         await interaction.followup.send(embed = embed)
+def searchPlex(data, title):
+    try:
+        encrypted = data["plexauth"]
+        secret_key = config('AESKEY')
+        encrypted = encrypted.split(':')
+        nonce = b64decode(encrypted[0])
+        encrypted = b64decode(encrypted[1])
+        box = SecretBox(bytes(secret_key, encoding='utf8'))
+        plexauth = box.decrypt(encrypted, nonce).decode('utf-8')
+        plexurl = data["plexserverurl"]
+        if not (plexurl.startswith('http') or plexurl.startswith('https')):
+            try:
+                plexurl = f'http://{plexurl}'
+                plex = PlexServer(plexurl, plexauth, session=session)
+            except:
+                plexurl = f'https://{plexurl}'
+                plex = PlexServer(plexurl, plexauth, session=session)
+        else:
+            plex = PlexServer(plexurl, plexauth, session=session)
+        movies = plex.library.section(data["plexserverlibrary"])
+    except Exception as e:
+        print(e)
+        return None
+    list = []
+    for video in movies.search(title = title, maxresults = 5):
+        list.append(video.title)
+    return(list)
+def getMoviesRecent(data):
+    try:
+        encrypted = data["plexauth"]
+        secret_key = config('AESKEY')
+        encrypted = encrypted.split(':')
+        nonce = b64decode(encrypted[0])
+        encrypted = b64decode(encrypted[1])
+        box = SecretBox(bytes(secret_key, encoding='utf8'))
+        plexauth = box.decrypt(encrypted, nonce).decode('utf-8')
+        plexurl = data["plexserverurl"]
+        if not (plexurl.startswith('http') or plexurl.startswith('https')):
+            try:
+                plexurl = f'http://{plexurl}'
+                plex = PlexServer(plexurl, plexauth, session=session)
+            except:
+                plexurl = f'https://{plexurl}'
+                plex = PlexServer(plexurl, plexauth, session=session)
+        else:
+            plex = PlexServer(plexurl, plexauth, session=session)
+        movies = plex.library.section(data["plexserverlibrary"])
+    except Exception as e:
+        print(e)
+        return None
+    list = []
+    for video in movies.recentlyAdded(maxresults=25):
+        list.append(video.title)
+    return(list)
 def getMovies(data):
     try:
         encrypted = data["plexauth"]
@@ -259,8 +403,8 @@ def getMovies(data):
         list.append(video.title)
     return(list)
 @client.tree.command(name = "host", description = "Host a Plex movie watch together with your friends.")
-@app_commands.describe(moviechoice = "The exact title of the movie you want to watch.")
-async def host(interaction: discord.Interaction, moviechoice: str):
+@app_commands.describe(moviechoice = "The exact title of the movie you want to watch.", timetostart = "The time in minutes to give your friends to join the watch together session. (Default: 5 minutes)")
+async def host(interaction: discord.Interaction, moviechoice: str, timetostart: int = 5):
     await interaction.response.defer()
     discordid = interaction.user.id
     discordid = str(discordid)
@@ -375,9 +519,12 @@ async def host(interaction: discord.Interaction, moviechoice: str):
                             embed.set_author(name = interaction.user, icon_url = interaction.user.avatar.url)
                             embed.add_field(name = f'{data["plexserverlibrary"]}', value=f"We are watching {movie.title}!", inline = False)
                             embed.add_field(name = 'Join Now', value="The room is now open to join! Run /join to join. Make sure you have linked your Plex and Discord accounts.", inline = False)
-                            embed.set_footer(text = "Room joining closes in 5 minutes.")
+                            if timetostart == 0:
+                                embed.set_footer(text = "Room joining will not be disabled. Movie will start immediately.")
+                            else:
+                                embed.set_footer(text = f"Room joining closes in {timetostart} minutes.")
                             await interaction.followup.send(embed = embed)
-                            await asyncio.sleep(300)
+                            await asyncio.sleep(timetostart*60)
                             #start room
                             try:
                                 #get users from room
@@ -407,10 +554,13 @@ async def host(interaction: discord.Interaction, moviechoice: str):
                                         "users": users
                                     }
                                 try:
-                                    db.collection(u'rooms').document(roomname).delete()
-                                    await interaction.followup.send(f"```Joining for {roomname} is closed. Open Plex on any device and accept the friend request if you are not already friends with the hoster. Then in 5 minutes, join the Watch Together session. {movie.title.capitalize()} will begin shortly.```")
-                                    await asyncio.sleep(300)
-                                    roomstart = requests.post(url, json = obj)
+                                    if timetostart == 0:
+                                        roomstart = requests.post(url, json = obj)
+                                    else:
+                                        db.collection(u'rooms').document(roomname).delete()
+                                        await interaction.followup.send(f"```Joining for {roomname} is closed. Open Plex on any device and accept the friend request if you are not already friends with the hoster. Then in 5 minutes, join the Watch Together session. {movie.title.capitalize()} will begin shortly.```")
+                                        await asyncio.sleep(timetostart*60)
+                                        roomstart = requests.post(url, json = obj)
                                     await interaction.followup.send(f"```{roomname} has now started watching {movie.title}!```")
                                 except:
                                     await interaction.followup.send('```❌ Something went wrong and the movie couldnt get a room set up. Error 316. Please try again, or report this using "/project"```')
@@ -501,17 +651,18 @@ async def join(ctx):
         embed.set_author(name = ctx.message.author, icon_url = ctx.author.avatar.url)
         embed.add_field(name = 'Create an account', value='https://mazi.pw/user', inline = False)
         await ctx.send(embed = embed)
-class async_discord_thread(Thread):
-    #thanks @FrankWhoee for this code snippet
-    def __init__(self):
-        Thread.__init__(self)
-        self.loop = asyncio.get_event_loop()
-        self.start()
-    async def starter(self):
-        await client.start(CLIENTTOKEN)
-    def run(self):
-        self.name = 'Discord.py'
-        self.loop.create_task(self.starter())
-        self.loop.run_forever()
-discord_thread = async_discord_thread()
-app.run(host="0.0.0.0", port="5001")
+# class async_discord_thread(Thread):
+#     #thanks @FrankWhoee for this code snippet
+#     def __init__(self):
+#         Thread.__init__(self)
+#         self.loop = asyncio.get_event_loop()
+#         self.start()
+#     async def starter(self):
+#         await client.start(CLIENTTOKEN)
+#     def run(self):
+#         self.name = 'Discord.py'
+#         self.loop.create_task(self.starter())
+#         self.loop.run_forever()
+# discord_thread = async_discord_thread()
+# app.run(host="0.0.0.0", port="5001")
+client.run(CLIENTTOKEN)
