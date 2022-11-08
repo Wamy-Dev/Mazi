@@ -282,12 +282,12 @@ async def movies(interaction: discord.Interaction):
                         await interaction.followup.send("```❌ No movies in Plex Movie library.```")
                     if len(movieslist) > 4096:
                         moviefields = []
-                        for movie in getMovies(data):
+                        for movie in getMoviesRecent(data):
                             moviefields.append(movie)
-                        movieslist = ""
+                        movieslist2 = ""
                         for items in moviefields:
-                            movieslist += f'{items}\n'
-                        embed = discord.Embed(title = f"Recently added in {libraryname}", description=movieslist, colour = discord.Colour.from_rgb(229,160,13))
+                            movieslist2 += f'{items}\n'
+                        embed = discord.Embed(title = f"Recently added in {libraryname}", description=movieslist2, colour = discord.Colour.from_rgb(229,160,13))
                         embed.set_author(name = interaction.user, icon_url = interaction.user.avatar.url)
                         embed.set_footer(text = "Mazi couldn't show all items so it is showing the most recently added.")
                         await interaction.followup.send(embed = embed)
@@ -372,8 +372,12 @@ def getMoviesRecent(data):
         print(e)
         return None
     list = []
-    for video in movies.recentlyAdded(maxresults=25):
+    total = 0
+    for video in movies.recentlyAdded(maxresults=50):
         list.append(video.title)
+        total += len(video.title)
+        if total > 4096:
+            break
     return(list)
 def getMovies(data):
     try:
