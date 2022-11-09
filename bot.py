@@ -9,6 +9,10 @@
 import requests 
 import urllib3
 import logging
+from logging import getLogger
+from quart.logging import default_handler
+getLogger('quart.serving').removeHandler(default_handler)
+getLogger('quart.serving').setLevel(logging.ERROR)
 session = requests.Session()
 session.verify = False
 urllib3.disable_warnings()
@@ -29,8 +33,6 @@ import random
 import requests
 from datetime import datetime
 from humanfriendly import format_timespan
-from hypercorn.config import Config
-from hypercorn.asyncio import serve
 #quart
 app = Quart(__name__)
 ready = False
@@ -673,6 +675,4 @@ class async_discord_thread(Thread):
         self.loop.create_task(self.starter())
         self.loop.run_forever()
 discord_thread = async_discord_thread()
-serverconfig = Config()
-serverconfig.bind = ["127.0.0.1:5001"]
-asyncio.run(serve(app, serverconfig))
+app.run(host="0.0.0.0", port="5001")
