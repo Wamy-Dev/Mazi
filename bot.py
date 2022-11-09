@@ -78,7 +78,7 @@ db = firestore.client()
 #counts
 countsdoc = db.collection(u'counts').document(u'counts')
 #discord
-CLIENTTOKEN = config('CLIENTTOKENT')
+CLIENTTOKEN = config('CLIENTTOKEN')
 intents = discord.Intents.default()
 client = commands.AutoShardedBot(command_prefix = '>', intents=intents)
 client.remove_command('help')
@@ -676,4 +676,3 @@ discord_thread = async_discord_thread()
 serverconfig = Config()
 serverconfig.bind = ["127.0.0.1:5001"]
 asyncio.run(serve(app, serverconfig))
-# client.run(CLIENTTOKEN)
