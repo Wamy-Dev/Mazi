@@ -8,3 +8,4 @@ pynacl
 requests
 plexapi
 humanfriendly
+hypercorn

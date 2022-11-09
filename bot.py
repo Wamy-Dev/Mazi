@@ -29,9 +29,10 @@ import random
 import requests
 from datetime import datetime
 from humanfriendly import format_timespan
+from hypercorn.config import Config
+from hypercorn.asyncio import serve
 #quart
 app = Quart(__name__)
-logging.getLogger('quart.serving').setLevel(logging.ERROR)
 ready = False
 inittime = datetime.now()
 @app.route("/", methods = ["get"])
@@ -75,9 +76,9 @@ cred = credentials.Certificate("./creds.json")
 firebase_admin.initialize_app(cred)
 db = firestore.client()
 #counts
-doc = db.collection(u'counts').document(u'counts')
+countsdoc = db.collection(u'counts').document(u'counts')
 #discord
-CLIENTTOKEN = config('CLIENTTOKEN')
+CLIENTTOKEN = config('CLIENTTOKENT')
 intents = discord.Intents.default()
 client = commands.AutoShardedBot(command_prefix = '>', intents=intents)
 client.remove_command('help')
@@ -124,7 +125,7 @@ async def ping(ctx):
     await ctx.send(txt)
 @client.hybrid_command(name = "counts", description = "View how many movie nights have been hosted globally.")
 async def counts(ctx):
-    counts = doc.get()
+    counts = countsdoc.get()
     previouscount = counts.to_dict()
     txt = str(f"""```css\nThe bot has hosted movie night {str(previouscount["counts"] - 1)} times.```""")
     await ctx.send(txt)
@@ -407,7 +408,7 @@ def getMovies(data):
         list.append(video.title)
     return(list)
 @client.tree.command(name = "host", description = "Host a Plex movie watch together with your friends.")
-@app_commands.describe(moviechoice = "The exact title of the movie you want to watch.", timetostart = "The time in minutes to give your friends to join the watch together session. (Default: 5 minutes)")
+@app_commands.describe(moviechoice = "The exact title of the movie you want to watch. Use /movies or /search to get the title.", timetostart = "The time in minutes to give your friends to join the watch together session. (Default: 5 minutes)")
 async def host(interaction: discord.Interaction, moviechoice: str, timetostart: int = 5):
     await interaction.response.defer()
     discordid = interaction.user.id
@@ -478,23 +479,26 @@ async def host(interaction: discord.Interaction, moviechoice: str, timetostart: 
                         key = movie.ratingKey
                         try:
                             #making room name
-                            doc = db.collection(u'counts').document(u'counts')
-                            counts = doc.get()
+                            counts = countsdoc.get()
                             previouscount = counts.to_dict()
                             roomnames = ["Action", "Animation", "Horror", "Adventure", "Comedy", "Romance", "SciFi", "Fantasy", "Musical"]
                             roomname = random.choice(roomnames)+"-"+str(previouscount["counts"])
+                            msg = await interaction.followup.send(f"```Please join this thread to join Watch Together session: {roomname}.```")
+                            thread = await interaction.channel.create_thread(name=f"Watch Together Session: {roomname}", message=msg, reason="Mazi created Watch Together room.", auto_archive_duration=60)
+                            await thread.send("```To join, please run '/join' in this thread.```")
+                            doc = db.collection(u'counts').document(u'counts')
                             userid = data["plexid"]
                             thumb = data["plexthumb"]
                             title = data["plextitle"]
                             email = data["plexemail"]
-                            channel = interaction.channel.id
+                            channel = thread.id
                             discordid = discordid
                             #add to firebase to allow joining
                             try:
                                 ref = db.collection(u'rooms').document(roomname)
                                 ref.set({
                                     u'Time Started': firestore.SERVER_TIMESTAMP,
-                                    u'Channel': channel,
+                                    u'Thread': channel,
                                     u'MovieKey': key,
                                     u'Server': serverurl,
                                     u'MachineID': machineid,
@@ -527,7 +531,7 @@ async def host(interaction: discord.Interaction, moviechoice: str, timetostart: 
                                 embed.set_footer(text = "Room joining will not be disabled. Movie will start immediately.")
                             else:
                                 embed.set_footer(text = f"Room joining closes in {timetostart} minutes.")
-                            await interaction.followup.send(embed = embed)
+                            await thread.send(embed = embed)
                             await asyncio.sleep(timetostart*60)
                             #start room
                             try:
@@ -562,15 +566,16 @@ async def host(interaction: discord.Interaction, moviechoice: str, timetostart: 
                                         roomstart = requests.post(url, json = obj)
                                     else:
                                         db.collection(u'rooms').document(roomname).delete()
-                                        await interaction.followup.send(f"```Joining for {roomname} is closed. Open Plex on any device and accept the friend request if you are not already friends with the hoster. Then in 5 minutes, join the Watch Together session. {movie.title.capitalize()} will begin shortly.```")
+                                        await thread.send(f"```Joining for {roomname} is closed. Open Plex on any device and accept the friend request if you are not already friends with the hoster. Then in 5 minutes, join the Watch Together session. {movie.title.capitalize()} will begin shortly.```")
                                         await asyncio.sleep(timetostart*60)
                                         roomstart = requests.post(url, json = obj)
-                                    await interaction.followup.send(f"```{roomname} has now started watching {movie.title}!```")
+                                    await thread.send(f"```{roomname} has now started watching {movie.title}!```")
                                 except:
                                     await interaction.followup.send('```❌ Something went wrong and the movie couldnt get a room set up. Error 316. Please try again, or report this using "/project"```')
                             except: 
                                 await interaction.followup.send('```❌ Something went wrong and the movie couldnt get a room set up. Error 289. Please try again, or report this using "/project"```')
-                        except:
+                        except Exception as e:
+                            print(e)
                             await interaction.followup.send('```❌ Something went wrong and the movie couldnt get a room set up. Error 238. Please try again, or report this using "/project"```')
                     except:
                         await interaction.followup.send('```❌ Movie not found in your library. Please check spelling or run "/movies" to view all of your movies.```')
@@ -610,7 +615,7 @@ async def join(ctx):
             if plexstatus & discordstatus:
                 #get all showings in channel
                 try:
-                    docs = db.collection(u'rooms').where(u'Channel', u'==', channel).stream()
+                    docs = db.collection(u'rooms').where(u'Thread', u'==', channel).stream()
                     norooms = True
                     for rooms in docs:
                         norooms = False
@@ -668,4 +673,7 @@ class async_discord_thread(Thread):
         self.loop.create_task(self.starter())
         self.loop.run_forever()
 discord_thread = async_discord_thread()
-app.run(host="0.0.0.0", port="5001")
+serverconfig = Config()
+serverconfig.bind = ["127.0.0.1:5001"]
+asyncio.run(serve(app, serverconfig))
+# client.run(CLIENTTOKEN)
