@@ -21,8 +21,8 @@ class Search(commands.Cog):
         self.client = client
 
     @app_commands.command(name="search", description="Search for an item in your Plex library.")
-    @app_commands.describe(search="The item you want to search for.")
-    async def search(self, interaction: Interaction, search: str):
+    @app_commands.describe(search="The item you want to search for.", library="Define the Plex library you would like to host from.")
+    async def search(self, interaction: Interaction, search: str, library: str = None):
         await interaction.response.defer() #wait until the bot is finished thinking
         discordid = str(interaction.user.id)
         # First check if the user is in the database
@@ -108,16 +108,19 @@ class Search(commands.Cog):
             return
 
         if plexstatus and plexserver and plexlibrary:
-            libraryname = data["plexserverlibrary"]
+            if library == None:
+                libraryname = data["plexserverlibrary"]
+            else:
+                libraryname = library
             try:
                 moviefields = []
-                for movie in searchPlex(data, search):
+                for movie in searchPlex(data, search, libraryname):
                     moviefields.append(movie)
                 movieslist = ""
                 for items in moviefields:
                     movieslist += f'{items}\n'
                 if len(moviefields) == 0:
-                    embed = discord.Embed(title = "No results found!", description=f"```❌ No results found in {libraryname} when searching for {search}. Please try again later or change search.```", colour = discord.Colour.from_rgb(229,160,13))
+                    embed = discord.Embed(title = "No results found!", description=f"```❌ No results found in library: {libraryname} when searching for {search}. Please try again later or change search.```", colour = discord.Colour.from_rgb(229,160,13))
                     embed.set_author(name = interaction.user.display_name, icon_url = interaction.user.display_avatar.url)
                     embed.set_footer(text = f"{interaction.user.display_name}'s {libraryname}")
                     await interaction.followup.send(embed = embed)
@@ -139,7 +142,7 @@ class Search(commands.Cog):
                 await interaction.followup.send(embed = embed, view=view)
                 return
 
-def searchPlex(data, title):
+def searchPlex(data, title, libraryname):
     try:
         encrypted = data["plexauth"]
         secret_key = config('AESKEY')
@@ -158,7 +161,7 @@ def searchPlex(data, title):
                 plex = PlexServer(plexurl, plexauth, session=session)
         else:
             plex = PlexServer(plexurl, plexauth, session=session)
-        movies = plex.library.section(data["plexserverlibrary"])
+        movies = plex.library.section(libraryname)
     except Exception as e:
         print(e)
         return None

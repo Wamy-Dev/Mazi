@@ -88,6 +88,15 @@ async def on_ready():
     await client.tree.sync()
     print("Tree synced")
 
+# @client.tree.command(name="reload", description="Reloads a cog.")
+# async def reload(interaction: discord.Interaction, cog: str = None):
+#     try:
+#         await client.reload_extension(f"cogs.{cog}")
+#         await interaction.response.send_message(f"Reloaded {cog}")
+#         await client.tree.sync()
+#     except Exception as e:
+#         await interaction.response.send_message(f"{e}")
+
 class async_discord_thread(Thread):
     #thanks @FrankWhoee for this code snippet
     def __init__(self):

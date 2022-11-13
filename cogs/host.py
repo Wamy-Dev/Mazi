@@ -22,10 +22,9 @@ class Host(commands.Cog):
 
     def __init__(self, client):
         self.client = client
-
     @app_commands.command(name="host", description="Host a Plex movie watch together with your friends.")
-    @app_commands.describe(moviechoice = "The exact title of the movie you want to watch. Use /movies or /search to get the title.", timetostart = "The time in minutes to give your friends to join the watch together session. (Default: 5 minutes)")
-    async def host(self, interaction: Interaction, moviechoice: str, timetostart: int = 5):
+    @app_commands.describe(library="Define the Plex library you would like to host from.", moviechoice = "The exact title of the movie you want to watch. Use /movies or /search to get the title.", timetostart = "The time in minutes to give your friends to join the watch together session. (Default: 5 minutes)")
+    async def host(self, interaction: Interaction, moviechoice: str, timetostart: int = 5, library: str = None):
         await interaction.response.defer() #wait until the bot is finished thinking
         discordid = str(interaction.user.id)
         # First check if the user is in the database
@@ -109,9 +108,19 @@ class Host(commands.Cog):
             await interaction.followup.send(embed=embed, view=view)
             return
         if plexstatus and plexserver and plexlibrary:
-            libraryname = data["plexserverlibrary"]
+            if library == None:
+                libraryname = data["plexserverlibrary"]
+            else:
+                libraryname = library
             try:
-                token, machineid, movie, key, plex = getHosting(data, moviechoice)
+                if getHosting(data, moviechoice, libraryname) is None:
+                    embed = discord.Embed(title = "Item not found!", description=f"```❌ {moviechoice} cannot be found in library: {libraryname}. Please try again.```", colour = discord.Colour.from_rgb(229,160,13))
+                    embed.set_author(name = interaction.user.display_name, icon_url = interaction.user.display_avatar.url)
+                    embed.set_footer(text = f"{interaction.user.display_name}'s {libraryname}")
+                    await interaction.followup.send(embed=embed)
+                    return
+                else:
+                    token, machineid, movie, key, plex = getHosting(data, moviechoice, libraryname)
             except Exception as e:
                 print(e)
                 button = discord.ui.Button(label="Fix accounts", style=discord.ButtonStyle.link, url="https://mazi.pw/user")
@@ -160,7 +169,7 @@ class Host(commands.Cog):
                 #send message that the room is ready
                 embed = discord.Embed(title = f"{roomname} is now open to join!", colour = discord.Colour.from_rgb(229,160,13))
                 embed.set_author(name = interaction.user.display_name, icon_url = interaction.user.display_avatar.url)
-                embed.add_field(name = f'{data["plexserverlibrary"]}', value=f"We are watching {movie.title}!", inline = False)
+                embed.add_field(name = f'{libraryname}', value=f"We are watching {movie.title}!", inline = False)
                 embed.add_field(name = 'Join Now', value="The room is now open to join! Run /join to join. Make sure you have linked your Plex and Discord accounts.", inline = False)
                 if timetostart == 0:
                     embed.set_footer(text = "Room joining will not be disabled. Movie will start immediately. This means that nobody will be able to join.")
@@ -233,7 +242,7 @@ class Host(commands.Cog):
                 await interaction.followup.send(embed = embed, view=view)
                 return
 
-def getHosting(data, moviechoice):
+def getHosting(data, moviechoice, libraryname):
     try:
         encrypted = data["plexauth"]
         secret_key = config('AESKEY')
@@ -254,7 +263,7 @@ def getHosting(data, moviechoice):
             plex = PlexServer(plexurl, plexauth, session=session)
         token = plex._token
         machineid = plex.machineIdentifier
-        movie = plex.library.section(data["plexserverlibrary"]).get(moviechoice)
+        movie = plex.library.section(libraryname).get(moviechoice)
         key = movie.ratingKey
         return token, machineid, movie, key, plex
     except:

@@ -21,7 +21,8 @@ class Movies(commands.Cog):
         self.client = client
 
     @app_commands.command(name="movies", description="View the all the movies available to watch on your linked Plex account.")
-    async def search(self, interaction: Interaction):
+    @app_commands.describe(library="Define the Plex library you would like to host from.")
+    async def search(self, interaction: Interaction, library: str = None):
         await interaction.response.defer() #wait until the bot is finished thinking
         discordid = str(interaction.user.id)
         # First check if the user is in the database
@@ -105,10 +106,13 @@ class Movies(commands.Cog):
             await interaction.followup.send(embed=embed, view=view)
             return
         if plexstatus and plexserver and plexlibrary:
-            libraryname = data["plexserverlibrary"]
+            if library == None:
+                libraryname = data["plexserverlibrary"]
+            else:
+                libraryname = library
             try:
                 moviefields = []
-                for movie in getMovies(data):
+                for movie in getMovies(data, libraryname):
                     moviefields.append(movie)
                 movieslist = ""
                 for items in moviefields:
@@ -120,7 +124,7 @@ class Movies(commands.Cog):
                     await interaction.followup.send(embed = embed)
                 if len(movieslist) > 4096:
                     moviefields = []
-                    for movie in getMoviesRecent(data):
+                    for movie in getMoviesRecent(data, libraryname):
                         moviefields.append(movie)
                     movieslist2 = ""
                     for items in moviefields:
@@ -146,7 +150,7 @@ class Movies(commands.Cog):
                 await interaction.followup.send(embed = embed, view=view)
                 return
             
-def getMoviesRecent(data):
+def getMoviesRecent(data, libraryname):
     try:
         encrypted = data["plexauth"]
         secret_key = config('AESKEY')
@@ -165,7 +169,7 @@ def getMoviesRecent(data):
                 plex = PlexServer(plexurl, plexauth, session=session)
         else:
             plex = PlexServer(plexurl, plexauth, session=session)
-        movies = plex.library.section(data["plexserverlibrary"])
+        movies = plex.library.section(libraryname)
     except Exception as e:
         print(e)
         return None
@@ -177,7 +181,7 @@ def getMoviesRecent(data):
         if total > 4096:
             break
     return(list)
-def getMovies(data):
+def getMovies(data, libraryname):
     try:
         encrypted = data["plexauth"]
         secret_key = config('AESKEY')
@@ -196,7 +200,7 @@ def getMovies(data):
                 plex = PlexServer(plexurl, plexauth, session=session)
         else:
             plex = PlexServer(plexurl, plexauth, session=session)
-        movies = plex.library.section(data["plexserverlibrary"])
+        movies = plex.library.section(libraryname)
     except Exception as e:
         print(e)
         return None
