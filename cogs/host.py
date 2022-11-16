@@ -86,7 +86,10 @@ class Host(commands.Cog):
             return
             # Check if the user has a Plex library linked
         try:
-            plexlibrary = data['plexserverlibrary']
+            if library == None:
+                plexlibrary = data['plexserverlibrary']
+            else:
+                plexlibrary = library
             if len(plexlibrary) == 0:
                 button = discord.ui.Button(label="Link your Plex server", style=discord.ButtonStyle.link, url="https://mazi.pw/user")
                 button2 = discord.ui.Button(label="View example library names", style=discord.ButtonStyle.link, url="https://github.com/Wamy-Dev/Mazi/wiki/Examples")
