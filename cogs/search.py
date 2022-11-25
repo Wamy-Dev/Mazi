@@ -4,11 +4,11 @@ from discord import Interaction
 from discord import app_commands
 from firebase_admin import firestore
 from decouple import config
-from base64 import b64decode
 from nacl.secret import SecretBox
 from plexapi.server import PlexServer
 import requests
 import urllib3
+from base64 import b64decode
 
 db = firestore.client()
 session = requests.Session()
@@ -24,10 +24,10 @@ class Search(commands.Cog):
     @app_commands.describe(search="The item you want to search for.", library="Define the Plex library you would like to host from.")
     async def search(self, interaction: Interaction, search: str, library: str = None):
         await interaction.response.defer() #wait until the bot is finished thinking
-        discordid = str(interaction.user.id)
+        discordid = interaction.user.id
         # First check if the user is in the database
         try:
-            docs = db.collection(u'users').where(u'discordid', u'==', discordid).stream()
+            docs = db.collection(u'userdata').where(u'discordid', u'==', discordid).stream()
             empty = True
             for doc in docs:
                 empty = False
@@ -61,7 +61,7 @@ class Search(commands.Cog):
             return
         # Check if the user has a Plex server linked
         try:
-            plexserver = data['plexserverurl']
+            plexserver = data['plexserver']
             if len(plexserver) == 0:
                 button = discord.ui.Button(label="Link your Plex server", style=discord.ButtonStyle.link, url="https://mazi.pw/user")
                 button2 = discord.ui.Button(label="View example server URLS", style=discord.ButtonStyle.link, url="https://github.com/Wamy-Dev/Mazi/wiki/Examples")
@@ -85,7 +85,7 @@ class Search(commands.Cog):
         # Check if the user has a Plex library linked
         try:
             if library == None:
-                plexlibrary = data['plexserverlibrary']
+                plexlibrary = data['plexlibrary']
             else:
                 plexlibrary = library
             if len(plexlibrary) == 0:
@@ -112,7 +112,7 @@ class Search(commands.Cog):
 
         if plexstatus and plexserver and plexlibrary:
             if library == None:
-                libraryname = data["plexserverlibrary"]
+                libraryname = data["plexlibrary"]
             else:
                 libraryname = library
             try:
@@ -147,14 +147,11 @@ class Search(commands.Cog):
 
 def searchPlex(data, title, libraryname):
     try:
-        encrypted = data["plexauth"]
+        encrypted = b64decode(data["plexauth"].encode("utf-8"))
         secret_key = config('AESKEY')
-        encrypted = encrypted.split(':')
-        nonce = b64decode(encrypted[0])
-        encrypted = b64decode(encrypted[1])
         box = SecretBox(bytes(secret_key, encoding='utf8'))
-        plexauth = box.decrypt(encrypted, nonce).decode('utf-8')
-        plexurl = data["plexserverurl"]
+        plexauth = box.decrypt(encrypted).decode("utf-8")
+        plexurl = data["plexserver"]
         if not (plexurl.startswith('http') or plexurl.startswith('https')):
             try:
                 plexurl = f'http://{plexurl}'

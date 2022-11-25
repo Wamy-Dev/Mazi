@@ -9,6 +9,7 @@ from nacl.secret import SecretBox
 from plexapi.server import PlexServer
 import requests
 import urllib3
+import traceback
 
 db = firestore.client()
 session = requests.Session()
@@ -24,10 +25,10 @@ class Movies(commands.Cog):
     @app_commands.describe(library="Define the Plex library you would like to host from.")
     async def search(self, interaction: Interaction, library: str = None):
         await interaction.response.defer() #wait until the bot is finished thinking
-        discordid = str(interaction.user.id)
+        discordid = interaction.user.id
         # First check if the user is in the database
         try:
-            docs = db.collection(u'users').where(u'discordid', u'==', discordid).stream()
+            docs = db.collection(u'userdata').where(u'discordid', u'==', discordid).stream()
             empty = True
             for doc in docs:
                 empty = False
@@ -40,7 +41,8 @@ class Movies(commands.Cog):
                 embed.set_author(name = interaction.user.display_name, icon_url = interaction.user.avatar.url)
                 await interaction.followup.send(embed=embed, view=view)
                 return
-        except:
+        except Exception as e:
+            print(e)
             button = discord.ui.Button(label="Link your Discord account", style=discord.ButtonStyle.link, url="https://mazi.pw/user")
             view = discord.ui.View()
             view.add_item(button)
@@ -61,7 +63,7 @@ class Movies(commands.Cog):
             return
         # Check if the user has a Plex server linked
         try:
-            plexserver = data['plexserverurl']
+            plexserver = data['plexserver']
             if len(plexserver) == 0:
                 button = discord.ui.Button(label="Link your Plex server", style=discord.ButtonStyle.link, url="https://mazi.pw/user")
                 button2 = discord.ui.Button(label="View example server URLS", style=discord.ButtonStyle.link, url="https://github.com/Wamy-Dev/Mazi/wiki/Examples")
@@ -85,7 +87,7 @@ class Movies(commands.Cog):
             # Check if the user has a Plex library linked
         try:
             if library == None:
-                plexlibrary = data['plexserverlibrary']
+                plexlibrary = data['plexlibrary']
             else:
                 plexlibrary = library
             if len(plexlibrary) == 0:
@@ -110,7 +112,7 @@ class Movies(commands.Cog):
             return
         if plexstatus and plexserver and plexlibrary:
             if library == None:
-                libraryname = data["plexserverlibrary"]
+                libraryname = data["plexlibrary"]
             else:
                 libraryname = library
             try:
@@ -155,14 +157,11 @@ class Movies(commands.Cog):
             
 def getMoviesRecent(data, libraryname):
     try:
-        encrypted = data["plexauth"]
+        encrypted = b64decode(data["plexauth"].encode("utf-8"))
         secret_key = config('AESKEY')
-        encrypted = encrypted.split(':')
-        nonce = b64decode(encrypted[0])
-        encrypted = b64decode(encrypted[1])
         box = SecretBox(bytes(secret_key, encoding='utf8'))
-        plexauth = box.decrypt(encrypted, nonce).decode('utf-8')
-        plexurl = data["plexserverurl"]
+        plexauth = box.decrypt(encrypted).decode("utf-8")
+        plexurl = data["plexserver"]
         if not (plexurl.startswith('http') or plexurl.startswith('https')):
             try:
                 plexurl = f'http://{plexurl}'
@@ -186,14 +185,11 @@ def getMoviesRecent(data, libraryname):
     return(list)
 def getMovies(data, libraryname):
     try:
-        encrypted = data["plexauth"]
+        encrypted = b64decode(data["plexauth"].encode("utf-8"))
         secret_key = config('AESKEY')
-        encrypted = encrypted.split(':')
-        nonce = b64decode(encrypted[0])
-        encrypted = b64decode(encrypted[1])
         box = SecretBox(bytes(secret_key, encoding='utf8'))
-        plexauth = box.decrypt(encrypted, nonce).decode('utf-8')
-        plexurl = data["plexserverurl"]
+        plexauth = box.decrypt(encrypted).decode("utf-8")
+        plexurl = data["plexserver"]
         if not (plexurl.startswith('http') or plexurl.startswith('https')):
             try:
                 plexurl = f'http://{plexurl}'
@@ -205,7 +201,7 @@ def getMovies(data, libraryname):
             plex = PlexServer(plexurl, plexauth, session=session)
         movies = plex.library.section(libraryname)
     except Exception as e:
-        print(e)
+        traceback.print_exc()
         return None
     list = []
     for video in movies.all():

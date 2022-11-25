@@ -19,11 +19,11 @@ class Join(commands.Cog):
     @app_commands.command(name="join", description="Join an active Plex watch together session room.")
     async def search(self, interaction: Interaction):
         await interaction.response.defer() #wait until the bot is finished thinking
-        discordid = str(interaction.user.id)
+        discordid = interaction.user.id
         channel = interaction.channel.id
         # First check if the user is in the database
         try:
-            docs = db.collection(u'users').where(u'discordid', u'==', discordid).stream()
+            docs = db.collection(u'userdata').where(u'discordid', u'==', discordid).stream()
             empty = True
             for doc in docs:
                 empty = False
@@ -73,7 +73,7 @@ class Join(commands.Cog):
                 await interaction.followup.send(embed=embed)
                 return
             try:
-                document = db.collection(u'users').where(u'discordid', u'==', discordid).stream()
+                document = db.collection(u'userdata').where(u'discordid', u'==', discordid).stream()
                 empty = True
                 for doc in document:
                     empty = False
@@ -83,7 +83,7 @@ class Join(commands.Cog):
                     title = data["plextitle"]
                     email = data["plexemail"]
                     #add to roomname
-                    userref = db.collection(u'rooms').document(roomname).collection(u'Users').document(discordid)
+                    userref = db.collection(u'rooms').document(roomname).collection(u'Users').document(str(discordid))
                     userref.set({
                         u'id': userid,
                         u'thumb': thumb,
@@ -98,7 +98,7 @@ class Join(commands.Cog):
                     embed = discord.Embed(title = "Error joining room!", description=f"```❌ Error joining room. Please try again later or report this error using /project.```", colour = discord.Colour.from_rgb(229,160,13))
                     embed.set_author(name = interaction.user.display_name, icon_url = interaction.user.display_avatar.url)
                     await interaction.followup.send(embed=embed)
-            except:
+            except Exception as e:
                 embed = discord.Embed(title = "Error joining room!", description=f"```❌ Error joining room. Please try again later or report this error using /project.```", colour = discord.Colour.from_rgb(229,160,13))
                 embed.set_author(name = interaction.user.display_name, icon_url = interaction.user.display_avatar.url)
                 await interaction.followup.send(embed=embed)

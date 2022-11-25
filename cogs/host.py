@@ -26,10 +26,10 @@ class Host(commands.Cog):
     @app_commands.describe(library="Define the Plex library you would like to host from.", moviechoice = "The exact title of the movie you want to watch. Use /movies or /search to get the title.", timetostart = "The time in minutes to give your friends to join the watch together session. (Default: 5 minutes)")
     async def host(self, interaction: Interaction, moviechoice: str, timetostart: int = 5, library: str = None):
         await interaction.response.defer() #wait until the bot is finished thinking
-        discordid = str(interaction.user.id)
+        discordid = interaction.user.id
         # First check if the user is in the database
         try:
-            docs = db.collection(u'users').where(u'discordid', u'==', discordid).stream()
+            docs = db.collection(u'userdata').where(u'discordid', u'==', discordid).stream()
             empty = True
             for doc in docs:
                 empty = False
@@ -63,7 +63,7 @@ class Host(commands.Cog):
             return
         # Check if the user has a Plex server linked
         try:
-            plexserver = data['plexserverurl']
+            plexserver = data['plexserver']
             if len(plexserver) == 0:
                 button = discord.ui.Button(label="Link your Plex server", style=discord.ButtonStyle.link, url="https://mazi.pw/user")
                 button2 = discord.ui.Button(label="View example server URLS", style=discord.ButtonStyle.link, url="https://github.com/Wamy-Dev/Mazi/wiki/Examples")
@@ -87,7 +87,7 @@ class Host(commands.Cog):
             # Check if the user has a Plex library linked
         try:
             if library == None:
-                plexlibrary = data['plexserverlibrary']
+                plexlibrary = data['plexlibrary']
             else:
                 plexlibrary = library
             if len(plexlibrary) == 0:
@@ -112,7 +112,7 @@ class Host(commands.Cog):
             return
         if plexstatus and plexserver and plexlibrary:
             if library == None:
-                libraryname = data["plexserverlibrary"]
+                libraryname = data["plexlibrary"]
             else:
                 libraryname = library
             try:
@@ -162,7 +162,7 @@ class Host(commands.Cog):
                     u'MachineID': machineid,
                 }, merge=True)
                 #now add first user
-                userref = db.collection(u'rooms').document(roomname).collection(u'Users').document(discordid)
+                userref = db.collection(u'rooms').document(roomname).collection(u'Users').document(str(discordid))
                 userref.set({
                     u'id': userid,
                     u'thumb': thumb,
@@ -225,12 +225,12 @@ class Host(commands.Cog):
                     }
                 try:
                     if timetostart == 0:
-                        roomstart = requests.post(url, json = obj)
+                        requests.post(url, json = obj)
                     else:
                         db.collection(u'rooms').document(roomname).delete()
                         await thread.send(f"```Joining for {roomname} is closed. Open Plex on any device and accept the friend request if you are not already friends with the hoster. Then in 5 minutes, join the Watch Together session. {movie.title.capitalize()} will begin shortly.```")
                         await asyncio.sleep(timetostart*60)
-                        roomstart = requests.post(url, json = obj)
+                        requests.post(url, json = obj)
                     await thread.send(f"```{roomname} has now started watching {movie.title}!```")
                 except:
                     embed = discord.Embed(title = "Server not accessible!", description=f"```❌ Something went wrong and couldn't get a room set up. Please try again later or report this as an error using /project.```", colour = discord.Colour.from_rgb(229,160,13))
@@ -244,17 +244,13 @@ class Host(commands.Cog):
                 embed.set_footer(text = f"{interaction.user.display_name}'s {libraryname}")
                 await interaction.followup.send(embed = embed, view=view)
                 return
-
 def getHosting(data, moviechoice, libraryname):
     try:
-        encrypted = data["plexauth"]
+        encrypted = b64decode(data["plexauth"].encode("utf-8"))
         secret_key = config('AESKEY')
-        encrypted = encrypted.split(':')
-        nonce = b64decode(encrypted[0])
-        encrypted = b64decode(encrypted[1])
         box = SecretBox(bytes(secret_key, encoding='utf8'))
-        plexauth = box.decrypt(encrypted, nonce).decode('utf-8')
-        plexurl = data["plexserverurl"]
+        plexauth = box.decrypt(encrypted).decode("utf-8")
+        plexurl = data["plexserver"]
         if not (plexurl.startswith('http') or plexurl.startswith('https')):
             try:
                 plexurl = f'http://{plexurl}'
