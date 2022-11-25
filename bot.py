@@ -72,7 +72,7 @@ async def index():
 cred = credentials.Certificate("./creds.json")
 firebase_admin.initialize_app(cred)
 #discord
-CLIENTTOKEN = config('CLIENTTOKENT')
+CLIENTTOKEN = config('CLIENTTOKEN')
 intents = discord.Intents.default()
 client = commands.AutoShardedBot(command_prefix = '>', intents=intents)
 client.remove_command('help')
@@ -88,14 +88,14 @@ async def on_ready():
     await client.tree.sync()
     print("Tree synced")
 
-@client.tree.command(name="reload", description="Reloads a cog.")
-async def reload(interaction: discord.Interaction, cog: str = None):
-    try:
-        await client.reload_extension(f"cogs.{cog}")
-        await interaction.response.send_message(f"Reloaded {cog}")
-        await client.tree.sync()
-    except Exception as e:
-        await interaction.response.send_message(f"{e}")
+# @client.tree.command(name="reload", description="Reloads a cog.")
+# async def reload(interaction: discord.Interaction, cog: str = None):
+#     try:
+#         await client.reload_extension(f"cogs.{cog}")
+#         await interaction.response.send_message(f"Reloaded {cog}")
+#         await client.tree.sync()
+#     except Exception as e:
+#         await interaction.response.send_message(f"{e}")
 
 class async_discord_thread(Thread):
     #thanks @FrankWhoee for this code snippet
@@ -114,13 +114,13 @@ class async_discord_thread(Thread):
         self.name = 'Discord.py'
         self.loop.create_task(self.starter())
         self.loop.run_forever()
-# discord_thread = async_discord_thread()
-# app.run(host="0.0.0.0", port="5001")
-async def load_extensions():
-    for filename in os.listdir("./cogs"):
-        if filename.endswith(".py"):
-            await client.load_extension(f"cogs.{filename[:-3]}")
-async def start():
-    await load_extensions()
-    await client.start(CLIENTTOKEN)
-asyncio.run(start())
+discord_thread = async_discord_thread()
+app.run(host="0.0.0.0", port="5001")
+# async def load_extensions():
+#     for filename in os.listdir("./cogs"):
+#         if filename.endswith(".py"):
+#             await client.load_extension(f"cogs.{filename[:-3]}")
+# async def start():
+#     await load_extensions()
+#     await client.start(CLIENTTOKEN)
+# asyncio.run(start())
