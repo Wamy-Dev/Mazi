@@ -5,14 +5,14 @@ from discord import app_commands
 
 class Modal(discord.ui.Modal, title='You got me!'):
     feedback = discord.ui.TextInput(
-        label='You found the Easter Egg!',
+        label='Você encontrou o Easter Egg!',
         style=discord.TextStyle.long,
-        default='You found the Easter Egg! If you want your name in the source code, send a screenshot of this to Wamy#0002 and your name will be added.',
+        default='Você encontrou o Easter Egg! Se você quiser seu nome no código-fonte, envie uma captura de tela para Wamy#0002 e seu nome será adicionado.',
         required=False,
         max_length=135,
     )
     async def on_submit(self, interaction: discord.Interaction):
-        await interaction.response.send_message('Thank you for using Mazi.', ephemeral=True)
+        await interaction.response.send_message('Obrigado por usar o Mazi.', ephemeral=True)
 
 class Eggotyou(commands.Cog):
 
