@@ -11,11 +11,11 @@ class Counts(commands.Cog):
     def __init__(self, client):
         self.client = client
         
-    @app_commands.command(name="counts", description="View how many movie nights have been hosted globally.")
+    @app_commands.command(name="counts", description="Veja quantas sessões de pipoca foram realizadas globalmente.")
     async def donate(self, interaction: Interaction):
         counts = countsdoc.get()
         previouscount = counts.to_dict()
-        txt = str(f"""```css\nThe bot has hosted movie night {str(previouscount["counts"] - 1)} times.```""")
+        txt = str(f"""```css\nO bot hospedou uma sessão pipoca {str(previouscount["counts"] - 1)} vezes.```""")
         await interaction.response.send_message(txt)
 
 async def setup(client):
