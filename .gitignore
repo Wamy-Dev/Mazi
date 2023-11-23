@@ -135,5 +135,4 @@ frontend/**
 backend/**
 creds.json
 .env
-dockerfile
 .dockerignore
