@@ -75,7 +75,7 @@ async def index():
     else:
         return await render_template("failpage.html")
 #firebase
-cred = credentials.Certificate("./creds.json")
+cred = credentials.Certificate("creds.json")
 firebase_admin.initialize_app(cred)
 #discord
 CLIENTTOKEN = config('CLIENTTOKEN')
