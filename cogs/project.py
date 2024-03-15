@@ -8,7 +8,7 @@ class Project(commands.Cog):
     def __init__(self, client):
         self.client = client
 
-    @app_commands.command(name="project", description="View the GitHub repository for Mazi.")
+    @app_commands.command(name="project", description="Veja o repositório GitHub para Mazi.")
     async def project(self, interaction: Interaction):
 
         embed = discord.Embed(title = "Mazi Github", colour = discord.Colour.from_rgb(229,160,13))

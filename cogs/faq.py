@@ -8,7 +8,7 @@ class Faq(commands.Cog):
     def __init__(self, client):
         self.client = client
 
-    @app_commands.command(name="faq", description="Read the Mazi F.A.Q.")
+    @app_commands.command(name="faq", description="Leia o Mazi F.A.Q.")
     async def faq(self, interaction: Interaction):
 
         embed = discord.Embed(title = "Mazi F.A.Q.", colour = discord.Colour.from_rgb(229,160,13))

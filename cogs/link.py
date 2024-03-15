@@ -8,7 +8,7 @@ class Link(commands.Cog):
     def __init__(self, client):
         self.client = client
 
-    @app_commands.command(name="link", description="Link your Plex and Discord accounts.")
+    @app_commands.command(name="link", description="Vincule suas contas Plex e Discord.")
     async def link(self, interaction: Interaction):
 
         embed = discord.Embed(title = "Mazi Website", colour = discord.Colour.from_rgb(229,160,13))

@@ -16,7 +16,7 @@ class Join(commands.Cog):
     def __init__(self, client):
         self.client = client
 
-    @app_commands.command(name="join", description="Join an active Plex watch together session room.")
+    @app_commands.command(name="join", description="Junte-se a uma sala de sessão ativa do Plex Assistir Juntos.")
     async def search(self, interaction: Interaction):
         await interaction.response.defer() #wait until the bot is finished thinking
         discordid = interaction.user.id
@@ -29,18 +29,18 @@ class Join(commands.Cog):
                 empty = False
                 data = doc.to_dict()
             if empty:
-                button = discord.ui.Button(label="Link your Discord account", style=discord.ButtonStyle.link, url="https://mazi.pw/user")
+                button = discord.ui.Button(label="Vincule sua conta do Discord", style=discord.ButtonStyle.link, url="https://mazi.pw/user")
                 view = discord.ui.View()
                 view.add_item(button)
-                embed = discord.Embed(title = "Discord account not linked!", description=f"```❌ You don't have a Discord account linked to your Mazi account. You also may not have a Mazi account. Please create one if needed. Please link your Discord account before using any features as it is required.```", colour = discord.Colour.from_rgb(229,160,13))
+                embed = discord.Embed(title = "Vincule sua conta do Discord!", description=f"```❌ Você não tem uma conta Discord vinculada à sua conta Mazi. Você também pode não ter uma conta Mazi. Por favor, crie um, se necessário. É necessário vincular sua conta do Discord antes de usar qualquer recurso!.```", colour = discord.Colour.from_rgb(229,160,13))
                 embed.set_author(name = interaction.user.display_name, icon_url = interaction.user.display_avatar.url)
                 await interaction.followup.send(embed=embed, view=view)
                 return
         except:
-            button = discord.ui.Button(label="Link your Discord account", style=discord.ButtonStyle.link, url="https://mazi.pw/user")
+            button = discord.ui.Button(label="Vincule sua conta do Discord", style=discord.ButtonStyle.link, url="https://mazi.pw/user")
             view = discord.ui.View()
             view.add_item(button)
-            embed = discord.Embed(title = "Discord account not linked!", description=f"```❌ You don't have a Discord account linked to your Mazi account. You also may not have a Mazi account. Please create one if needed. Please link your Discord account before using any features as it is required.```", colour = discord.Colour.from_rgb(229,160,13))
+            embed = discord.Embed(title = "Conta do Discord não vinculada!", description=f"```❌ Você não tem uma conta Discord vinculada à sua conta Mazi. Você também pode não ter uma conta Mazi. Por favor, crie um, se necessário. É necessário vincular sua conta do Discord antes de usar qualquer recurso!.```", colour = discord.Colour.from_rgb(229,160,13))
             embed.set_author(name = interaction.user.display_name, icon_url = interaction.user.display_avatar.url)
             await interaction.followup.send(embed=embed, view=view)
             return
@@ -48,10 +48,10 @@ class Join(commands.Cog):
         try:
             plexstatus = data['plex']
         except:
-            button = discord.ui.Button(label="Link your Plex account", style=discord.ButtonStyle.link, url="https://mazi.pw/user")
+            button = discord.ui.Button(label="Vincule sua conta do Plex", style=discord.ButtonStyle.link, url="https://mazi.pw/user")
             view = discord.ui.View()
             view.add_item(button)
-            embed = discord.Embed(title = "Plex Library not linked!", description=f"```❌ You don't have a Plex account linked to your Mazi account. Please link one before using any features as it is required.```", colour = discord.Colour.from_rgb(229,160,13))
+            embed = discord.Embed(title = "Biblioteca Plex não vinculada!", description=f"```❌ Você não tem uma conta Plex vinculada à sua conta Mazi. É necessário vincular sua conta do Discord antes de usar qualquer recurso!```", colour = discord.Colour.from_rgb(229,160,13))
             embed.set_author(name = interaction.user.display_name, icon_url = interaction.user.display_avatar.url)
             await interaction.followup.send(embed=embed, view=view)
             return
@@ -63,12 +63,12 @@ class Join(commands.Cog):
                     norooms = False
                     roomname = rooms.id
                 if norooms:
-                    embed = discord.Embed(title = "No joinable rooms!", description=f"```❌ No joinable rooms found. Please try again later or in another thread.```", colour = discord.Colour.from_rgb(229,160,13))
+                    embed = discord.Embed(title = "Não há salas para entrar!", description=f"```❌ Não foram encontradas salas para entrar. Tente novamente mais tarde ou em outro tópico.```", colour = discord.Colour.from_rgb(229,160,13))
                     embed.set_author(name = interaction.user.display_name, icon_url = interaction.user.display_avatar.url)
                     await interaction.followup.send(embed=embed)
                     return
             except:
-                embed = discord.Embed(title = "No joinable rooms!", description=f"```❌ No joinable rooms found. Please try again later or in another thread.```", colour = discord.Colour.from_rgb(229,160,13))
+                embed = discord.Embed(title = "Não há salas que podem ser unidas!", description=f"```❌ Não foram encontradas salas para entrar. Tente novamente mais tarde ou em outro tópico.```", colour = discord.Colour.from_rgb(229,160,13))
                 embed.set_author(name = interaction.user.display_name, icon_url = interaction.user.display_avatar.url)
                 await interaction.followup.send(embed=embed)
                 return
@@ -91,15 +91,15 @@ class Join(commands.Cog):
                         u'email': email
                         }, merge=True)
                     #announce user join
-                    embed = discord.Embed(title = f"{interaction.user.display_name} has joined {roomname}!", description=f"```{interaction.user.display_name} will recieve an invite to {roomname}.```", colour = discord.Colour.from_rgb(229,160,13))
+                    embed = discord.Embed(title = f"{interaction.user.display_name} Juntou se a {roomname}!", description=f"```{interaction.user.display_name} receberá um convite para {roomname}.```", colour = discord.Colour.from_rgb(229,160,13))
                     embed.set_author(name = interaction.user.display_name, icon_url = interaction.user.display_avatar.url)
                     await interaction.followup.send(embed=embed)
                 if empty:
-                    embed = discord.Embed(title = "Error joining room!", description=f"```❌ Error joining room. Please try again later or report this error using /project.```", colour = discord.Colour.from_rgb(229,160,13))
+                    embed = discord.Embed(title = "Erro ao entrar na sala!", description=f"```❌ Erro ao entrar na sala. Tente novamente mais tarde ou reporte este erro usando /project.```", colour = discord.Colour.from_rgb(229,160,13))
                     embed.set_author(name = interaction.user.display_name, icon_url = interaction.user.display_avatar.url)
                     await interaction.followup.send(embed=embed)
             except Exception as e:
-                embed = discord.Embed(title = "Error joining room!", description=f"```❌ Error joining room. Please try again later or report this error using /project.```", colour = discord.Colour.from_rgb(229,160,13))
+                embed = discord.Embed(title = "Erro ao entrar na sala!", description=f"```❌ Erro ao entrar na sala. Tente novamente mais tarde ou reporte este erro usando /project.```", colour = discord.Colour.from_rgb(229,160,13))
                 embed.set_author(name = interaction.user.display_name, icon_url = interaction.user.display_avatar.url)
                 await interaction.followup.send(embed=embed)
 

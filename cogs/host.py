@@ -22,8 +22,8 @@ class Host(commands.Cog):
 
     def __init__(self, client):
         self.client = client
-    @app_commands.command(name="host", description="Host a Plex movie watch together with your friends.")
-    @app_commands.describe(library="Define the Plex library you would like to host from.", moviechoice = "The exact title of the movie you want to watch. Use /movies or /search to get the title.", timetostart = "The time in minutes to give your friends to join the watch together session. (Default: 5 minutes)")
+    @app_commands.command(name="host", description="Hospede uma exibição de filme (Assistir Juntos) com seus amigos.")
+    @app_commands.describe(library="Defina a biblioteca Plex que você gostaria de hospedar.", moviechoice = "descubra o título exato do filme que você deseja assistir. Use /movies ou /search para obter o título.", timetostart = "O tempo em minutos para seus amigos participarem da sessão de Assistir Juntos. (Predefinição: 5 minutos)")
     async def host(self, interaction: Interaction, moviechoice: str, timetostart: int = 5, library: str = None):
         await interaction.response.defer() #wait until the bot is finished thinking
         discordid = interaction.user.id
@@ -35,18 +35,18 @@ class Host(commands.Cog):
                 empty = False
                 data = doc.to_dict()
             if empty:
-                button = discord.ui.Button(label="Link your Discord account", style=discord.ButtonStyle.link, url="https://mazi.pw/user")
+                button = discord.ui.Button(label="Vincule sua conta do Discord", style=discord.ButtonStyle.link, url="https://mazi.pw/user")
                 view = discord.ui.View()
                 view.add_item(button)
-                embed = discord.Embed(title = "Discord account not linked!", description=f"```❌ You don't have a Discord account linked to your Mazi account. You also may not have a Mazi account. Please create one if needed. Please link your Discord account before using any features as it is required.```", colour = discord.Colour.from_rgb(229,160,13))
+                embed = discord.Embed(title = "Conta do Discord não vinculada!", description=f"```❌ Você não tem uma conta Discord vinculada à sua conta Mazi. Você também pode não ter uma conta Mazi. Por favor, crie uma, se necessário. É necessário Vincular antes de usar qualquer recurso.```", colour = discord.Colour.from_rgb(229,160,13))
                 embed.set_author(name = interaction.user.display_name, icon_url = interaction.user.display_avatar.url)
                 await interaction.followup.send(embed=embed, view=view)
                 return
         except:
-            button = discord.ui.Button(label="Link your Discord account", style=discord.ButtonStyle.link, url="https://mazi.pw/user")
+            button = discord.ui.Button(label="Vincule sua conta do Discord", style=discord.ButtonStyle.link, url="https://mazi.pw/user")
             view = discord.ui.View()
             view.add_item(button)
-            embed = discord.Embed(title = "Discord account not linked!", description=f"```❌ You don't have a Discord account linked to your Mazi account. You also may not have a Mazi account. Please create one if needed. Please link your Discord account before using any features as it is required.```", colour = discord.Colour.from_rgb(229,160,13))
+            embed = discord.Embed(title = "Conta do Discord não vinculada!", description=f"```❌ Você não tem uma conta Discord vinculada à sua conta Mazi. Você também pode não ter uma conta Mazi. Por favor, crie um, se necessário. É necessário Vincular antes de usar qualquer recurso.```", colour = discord.Colour.from_rgb(229,160,13))
             embed.set_author(name = interaction.user.display_name, icon_url = interaction.user.display_avatar.url)
             await interaction.followup.send(embed=embed, view=view)
             return
@@ -54,10 +54,10 @@ class Host(commands.Cog):
         try:
             plexstatus = data['plex']
         except:
-            button = discord.ui.Button(label="Link your Plex account", style=discord.ButtonStyle.link, url="https://mazi.pw/user")
+            button = discord.ui.Button(label="Vincule sua conta do Plex!", style=discord.ButtonStyle.link, url="https://mazi.pw/user")
             view = discord.ui.View()
             view.add_item(button)
-            embed = discord.Embed(title = "Plex Library not linked!", description=f"```❌ You don't have a Plex account linked to your Mazi account. Please link one before using any features as it is required.```", colour = discord.Colour.from_rgb(229,160,13))
+            embed = discord.Embed(title = "Biblioteca Plex não vinculada!!", description=f"```❌ Você não tem uma conta Plex vinculada à sua conta Mazi. , É necessário Vincular antes de usar qualquer recurso.```", colour = discord.Colour.from_rgb(229,160,13))
             embed.set_author(name = interaction.user.display_name, icon_url = interaction.user.display_avatar.url)
             await interaction.followup.send(embed=embed, view=view)
             return
@@ -65,22 +65,22 @@ class Host(commands.Cog):
         try:
             plexserver = data['plexserver']
             if len(plexserver) == 0:
-                button = discord.ui.Button(label="Link your Plex server", style=discord.ButtonStyle.link, url="https://mazi.pw/user")
-                button2 = discord.ui.Button(label="View example server URLS", style=discord.ButtonStyle.link, url="https://github.com/Wamy-Dev/Mazi/wiki/Examples")
+                button = discord.ui.Button(label="Vincule seu servidor Plex", style=discord.ButtonStyle.link, url="https://mazi.pw/user")
+                button2 = discord.ui.Button(label="Ver URLs de exemplo de servidor", style=discord.ButtonStyle.link, url="https://github.com/Wamy-Dev/Mazi/wiki/Examples")
                 view = discord.ui.View()
                 view.add_item(button)
                 view.add_item(button2)
-                embed = discord.Embed(title = "Plex Server not linked!", description=f"```❌ You don't have a Plex server linked to your Mazi account. Please add one as it is required to host sessions.```", colour = discord.Colour.from_rgb(229,160,13))
+                embed = discord.Embed(title = "Plex Server não vinculado!", description=f"```❌ Você não tem um servidor Plex vinculado à sua conta Mazi. É necessário Vincular antes de hospedar sessões.```", colour = discord.Colour.from_rgb(229,160,13))
                 embed.set_author(name = interaction.user.display_name, icon_url = interaction.user.display_avatar.url)
                 await interaction.followup.send(embed=embed, view=view)
                 return
         except:
-            button = discord.ui.Button(label="Link your Plex server", style=discord.ButtonStyle.link, url="https://mazi.pw/user")
-            button2 = discord.ui.Button(label="View example server URLS", style=discord.ButtonStyle.link, url="https://github.com/Wamy-Dev/Mazi/wiki/Examples")
+            button = discord.ui.Button(label="Vincule seu servidor Plex", style=discord.ButtonStyle.link, url="https://mazi.pw/user")
+            button2 = discord.ui.Button(label="Ver URLs de servidor de exemplo", style=discord.ButtonStyle.link, url="https://github.com/Wamy-Dev/Mazi/wiki/Examples")
             view = discord.ui.View()
             view.add_item(button)
             view.add_item(button2)
-            embed = discord.Embed(title = "Plex Library not linked!", description=f"```❌ You don't have a Plex server linked to your Mazi account. Please add one as it is required to host sessions.```", colour = discord.Colour.from_rgb(229,160,13))
+            embed = discord.Embed(title = "Biblioteca Plex não vinculada!", description=f"```❌ Você não tem um servidor Plex vinculado à sua conta Mazi. É necessário Vincular antes de hospedar sessões.```", colour = discord.Colour.from_rgb(229,160,13))
             embed.set_author(name = interaction.user.display_name, icon_url = interaction.user.display_avatar.url)
             await interaction.followup.send(embed=embed, view=view)
             return
@@ -91,22 +91,22 @@ class Host(commands.Cog):
             else:
                 plexlibrary = library
             if len(plexlibrary) == 0:
-                button = discord.ui.Button(label="Link your Plex server", style=discord.ButtonStyle.link, url="https://mazi.pw/user")
-                button2 = discord.ui.Button(label="View example library names", style=discord.ButtonStyle.link, url="https://github.com/Wamy-Dev/Mazi/wiki/Examples")
+                button = discord.ui.Button(label="Vincule seu servidor Plex", style=discord.ButtonStyle.link, url="https://mazi.pw/user")
+                button2 = discord.ui.Button(label="Ver URLs de servidor de exemplo", style=discord.ButtonStyle.link, url="https://github.com/Wamy-Dev/Mazi/wiki/Examples")
                 view = discord.ui.View()
                 view.add_item(button)
                 view.add_item(button2)
-                embed = discord.Embed(title = "Plex Library not linked!", description=f"```❌ You don't have a Plex library linked to your Mazi account. Please add one as it is required to host sessions.```", colour = discord.Colour.from_rgb(229,160,13))
+                embed = discord.Embed(title = "Biblioteca Plex não vinculada!", description=f"```❌ Você não tem uma biblioteca Plex vinculada à sua conta Mazi. É necessário Vincular antes de hospedar sessões.```", colour = discord.Colour.from_rgb(229,160,13))
                 embed.set_author(name = interaction.user.display_name, icon_url = interaction.user.display_avatar.url)
                 await interaction.followup.send(embed=embed, view=view)
                 return
         except:
-            button = discord.ui.Button(label="Link your Plex server", style=discord.ButtonStyle.link, url="https://mazi.pw/user")
-            button2 = discord.ui.Button(label="View example library names", style=discord.ButtonStyle.link, url="https://github.com/Wamy-Dev/Mazi/wiki/Examples")
+            button = discord.ui.Button(label="Vincule seu servidor Plex", style=discord.ButtonStyle.link, url="https://mazi.pw/user")
+            button2 = discord.ui.Button(label="Ver exemplos de nomes de bibliotecas", style=discord.ButtonStyle.link, url="https://github.com/Wamy-Dev/Mazi/wiki/Examples")
             view = discord.ui.View()
             view.add_item(button)
             view.add_item(button2)
-            embed = discord.Embed(title = "Plex Library not linked!", description=f"```❌ You don't have a Plex library linked to your Mazi account. Please add one as it is required to host sessions.```", colour = discord.Colour.from_rgb(229,160,13))
+            embed = discord.Embed(title = "Biblioteca Plex não vinculada!", description=f"```❌ Você não tem uma biblioteca Plex vinculada à sua conta Mazi. É necessário Vincular antes de hospedar sessões.```", colour = discord.Colour.from_rgb(229,160,13))
             embed.set_author(name = interaction.user.display_name, icon_url = interaction.user.display_avatar.url)
             await interaction.followup.send(embed=embed, view=view)
             return
@@ -117,7 +117,7 @@ class Host(commands.Cog):
                 libraryname = library
             try:
                 if getHosting(data, moviechoice, libraryname) is None:
-                    embed = discord.Embed(title = "Item not found!", description=f"```❌ {moviechoice} cannot be found in library: {libraryname}. Please try again.```", colour = discord.Colour.from_rgb(229,160,13))
+                    embed = discord.Embed(title = "Item não encontrado!", description=f"```❌ {moviechoice} não pode ser encontrado na biblioteca: {libraryname}. Por favor, tente novamente.```", colour = discord.Colour.from_rgb(229,160,13))
                     embed.set_author(name = interaction.user.display_name, icon_url = interaction.user.display_avatar.url)
                     embed.set_footer(text = f"{interaction.user.display_name}'s {libraryname}")
                     await interaction.followup.send(embed=embed)
@@ -126,12 +126,12 @@ class Host(commands.Cog):
                     token, machineid, movie, key, plex = getHosting(data, moviechoice, libraryname)
             except Exception as e:
                 print(e)
-                button = discord.ui.Button(label="Fix accounts", style=discord.ButtonStyle.link, url="https://mazi.pw/user")
-                button2 = discord.ui.Button(label="View examples", style=discord.ButtonStyle.link, url="https://github.com/Wamy-Dev/Mazi/wiki/Examples")
+                button = discord.ui.Button(label="Corrigir contas", style=discord.ButtonStyle.link, url="https://mazi.pw/user")
+                button2 = discord.ui.Button(label="Ver exemplos", style=discord.ButtonStyle.link, url="https://github.com/Wamy-Dev/Mazi/wiki/Examples")
                 view = discord.ui.View()
                 view.add_item(button)
                 view.add_item(button2)
-                embed = discord.Embed(title = "Server not accessible!", description=f"```❌ Your sever is not accessible. This could be due to your server url being not accessible or wrong, or to your server library not being correct. Please view the examples if you need help adding your link or library.```", colour = discord.Colour.from_rgb(229,160,13))
+                embed = discord.Embed(title = "Servidor não acessível!", description=f"```❌ Seu servidor não está acessível. Isso pode ocorrer porque o URL do seu servidor não está acessível ou está errado, ou porque a biblioteca do seu servidor não está correta. Veja os exemplos se precisar de ajuda para adicionar seu link ou biblioteca.```", colour = discord.Colour.from_rgb(229,160,13))
                 embed.set_author(name = interaction.user.display_name, icon_url = interaction.user.display_avatar.url)
                 embed.set_footer(text = f"{interaction.user.display_name}'s {libraryname}")
                 await interaction.followup.send(embed = embed, view=view)
@@ -140,11 +140,11 @@ class Host(commands.Cog):
                 # create room
                 counts = countsdoc.get()
                 previouscount = counts.to_dict()
-                roomnames = ["Action", "Animation", "Horror", "Adventure", "Comedy", "Romance", "SciFi", "Fantasy", "Musical"]
+                roomnames = ["Ação", "Animação", "Horror", "Aventura", "Comédia", "Romance", "Ficção Científica", "Fantasia", "Musical"]
                 roomname = random.choice(roomnames)+"-"+str(previouscount["counts"])
-                msg = await interaction.followup.send(f"```Please join this thread to join Watch Together session: {roomname}.```")
-                thread = await interaction.channel.create_thread(name=f"Watch Together Session: {roomname}", message=msg, reason="Mazi created Watch Together room.", auto_archive_duration=60)
-                await thread.send("```To join, please run '/join' in this thread.```")
+                msg = await interaction.followup.send(f"```Junte-se a este tópico para participar da sessão Watch Together: {roomname}.```")
+                thread = await interaction.channel.create_thread(name=f"Assistir Sessão Juntos: {roomname}", message=msg, reason="Mazi criou a sala Watch Together.", auto_archive_duration=60)
+                await thread.send("```Para participar, execute '/join' neste tópico.```")
                 doc = db.collection(u'counts').document(u'counts')
                 userid = data["plexid"]
                 thumb = data["plexthumb"]
@@ -155,7 +155,7 @@ class Host(commands.Cog):
                 # add to database
                 ref = db.collection(u'rooms').document(roomname)
                 ref.set({
-                    u'Time Started': firestore.SERVER_TIMESTAMP,
+                    u'Hora Iniciada': firestore.SERVER_TIMESTAMP,
                     u'Thread': channel,
                     u'MovieKey': key,
                     u'Server': plexserver,
@@ -170,18 +170,18 @@ class Host(commands.Cog):
                     u'email': email,
                     }, merge=True)
                 #send message that the room is ready
-                embed = discord.Embed(title = f"{roomname} is now open to join!", colour = discord.Colour.from_rgb(229,160,13))
+                embed = discord.Embed(title = f"{roomname} agora está aberto para participar!", colour = discord.Colour.from_rgb(229,160,13))
                 embed.set_author(name = interaction.user.display_name, icon_url = interaction.user.display_avatar.url)
-                embed.add_field(name = f'{libraryname}', value=f"We are watching {movie.title}!", inline = False)
-                embed.add_field(name = 'Join Now', value="The room is now open to join! Run /join to join. Make sure you have linked your Plex and Discord accounts.", inline = False)
+                embed.add_field(name = f'{libraryname}', value=f"Nós estamos observando {movie.title}!", inline = False)
+                embed.add_field(name = 'Join Now', value="A sala já está aberta para participar! Execute /join para participar. Certifique-se de ter vinculado suas contas Plex e Discord.", inline = False)
                 if timetostart == 0:
-                    embed.set_footer(text = "Room joining will not be disabled. Movie will start immediately. This means that nobody will be able to join.")
+                    embed.set_footer(text = "A entrada na sala não será desativada. O filme começará imediatamente. Isso significa que ninguém poderá entrar.")
                 else:
-                    embed.set_footer(text = f"Room joining closes in {timetostart} minutes.")
+                    embed.set_footer(text = f"A junção da sala fecha em {timetostart} minutos.")
                 await thread.send(embed = embed)
             except Exception as e:
                 print(e)
-                print("error creating room")
+                print("erro ao criar sala")
                 return
             # update counts
             try:
@@ -192,7 +192,7 @@ class Host(commands.Cog):
                 doc.update({u'counts': newcount})
             except Exception as e: 
                 print(e)
-                print('Adding count failed')
+                print('Falha ao adicionar contagem')
             # timer for room
             await asyncio.sleep(timetostart*60)
             #start room
@@ -228,18 +228,18 @@ class Host(commands.Cog):
                         requests.post(url, json = obj)
                     else:
                         db.collection(u'rooms').document(roomname).delete()
-                        await thread.send(f"```Joining for {roomname} is closed. Open Plex on any device and accept the friend request if you are not already friends with the hoster. Then in 5 minutes, join the Watch Together session. {movie.title.capitalize()} will begin shortly.```")
+                        await thread.send(f"```Juntando-se para {roomname} está fechado. Abra o Plex em qualquer dispositivo e aceite a solicitação de amizade se você ainda não for amigo do hoster. Então, em 5 minutos, participe da sessão Assistir Juntos. {movie.title.capitalize()} começará em breve.```")
                         await asyncio.sleep(timetostart*60)
                         requests.post(url, json = obj)
-                    await thread.send(f"```{roomname} has now started watching {movie.title}!```")
+                    await thread.send(f"```{roomname} agora começou a assistir {movie.title}!```")
                 except:
-                    embed = discord.Embed(title = "Server not accessible!", description=f"```❌ Something went wrong and couldn't get a room set up. Please try again later or report this as an error using /project.```", colour = discord.Colour.from_rgb(229,160,13))
+                    embed = discord.Embed(title = "Servidor não acessível!", description=f"```❌ Algo deu errado e não foi possível arrumar uma sala. Tente novamente mais tarde ou relate isso como um erro usando /project.```", colour = discord.Colour.from_rgb(229,160,13))
                     embed.set_author(name = interaction.user.display_name, icon_url = interaction.user.display_avatar.url)
                     embed.set_footer(text = f"{interaction.user.display_name}'s {libraryname}")
                     await interaction.followup.send(embed = embed, view=view)
                     return
             except: 
-                embed = discord.Embed(title = "Server not accessible!", description=f"```❌ Something went wrong and couldn't get a room set up. Please try again later or report this as an error using /project.```", colour = discord.Colour.from_rgb(229,160,13))
+                embed = discord.Embed(title = "Servidor não acessível!", description=f"```❌ Algo deu errado e não foi possível arrumar uma sala. Tente novamente mais tarde ou relate isso como um erro usando /project.```", colour = discord.Colour.from_rgb(229,160,13))
                 embed.set_author(name = interaction.user.display_name, icon_url = interaction.user.display_avatar.url)
                 embed.set_footer(text = f"{interaction.user.display_name}'s {libraryname}")
                 await interaction.followup.send(embed = embed, view=view)

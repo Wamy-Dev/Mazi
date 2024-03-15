@@ -8,7 +8,7 @@ class Website(commands.Cog):
     def __init__(self, client):
         self.client = client
 
-    @app_commands.command(name="website", description="View the Mazi website.")
+    @app_commands.command(name="website", description="Acesse o site da Mazi.")
     async def website(self, interaction: Interaction):
 
         embed = discord.Embed(title = "Mazi Website", colour = discord.Colour.from_rgb(229,160,13))
