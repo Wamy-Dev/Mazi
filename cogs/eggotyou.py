@@ -12,7 +12,7 @@ class Modal(discord.ui.Modal, title='You got me!'):
         max_length=135,
     )
     async def on_submit(self, interaction: discord.Interaction):
-        await interaction.response.send_message('Thank you for using Mazi.', ephemeral=True)
+        await interaction.response.send_message('Thank you for using mommunist.', ephemeral=True)
 
 class Eggotyou(commands.Cog):
 

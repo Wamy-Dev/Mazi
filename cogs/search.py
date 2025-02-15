@@ -33,18 +33,18 @@ class Search(commands.Cog):
                 empty = False
                 data = doc.to_dict()
             if empty:
-                button = discord.ui.Button(label="Link your Discord account", style=discord.ButtonStyle.link, url="https://mazi.pw/user")
+                button = discord.ui.Button(label="Link your Discord account", style=discord.ButtonStyle.link, url="https://mommunist.thecrimsontint.com/user")
                 view = discord.ui.View()
                 view.add_item(button)
-                embed = discord.Embed(title = "Discord account not linked!", description=f"```❌ You don't have a Discord account linked to your Mazi account. You also may not have a Mazi account. Please create one if needed. Please link your Discord account before using any features as it is required.```", colour = discord.Colour.from_rgb(229,160,13))
+                embed = discord.Embed(title = "Discord account not linked!", description=f"```❌ You don't have a Discord account linked to your mommunist account. You also may not have a mommunist account. Please create one if needed. Please link your Discord account before using any features as it is required.```", colour = discord.Colour.from_rgb(229,160,13))
                 embed.set_author(name = interaction.user.display_name, icon_url = interaction.user.display_avatar.url)
                 await interaction.followup.send(embed=embed, view=view)
                 return
         except:
-            button = discord.ui.Button(label="Link your Discord account", style=discord.ButtonStyle.link, url="https://mazi.pw/user")
+            button = discord.ui.Button(label="Link your Discord account", style=discord.ButtonStyle.link, url="https://mommunist.thecrimsontint.com/user")
             view = discord.ui.View()
             view.add_item(button)
-            embed = discord.Embed(title = "Discord account not linked!", description=f"```❌ You don't have a Discord account linked to your Mazi account. You also may not have a Mazi account. Please create one if needed. Please link your Discord account before using any features as it is required.```", colour = discord.Colour.from_rgb(229,160,13))
+            embed = discord.Embed(title = "Discord account not linked!", description=f"```❌ You don't have a Discord account linked to your mommunist account. You also may not have a mommunist account. Please create one if needed. Please link your Discord account before using any features as it is required.```", colour = discord.Colour.from_rgb(229,160,13))
             embed.set_author(name = interaction.user.display_name, icon_url = interaction.user.display_avatar.url)
             await interaction.followup.send(embed=embed, view=view)
             return
@@ -52,10 +52,10 @@ class Search(commands.Cog):
         try:
             plexstatus = data['plex']
         except:
-            button = discord.ui.Button(label="Link your Plex account", style=discord.ButtonStyle.link, url="https://mazi.pw/user")
+            button = discord.ui.Button(label="Link your Plex account", style=discord.ButtonStyle.link, url="https://mommunist.thecrimsontint.com/user")
             view = discord.ui.View()
             view.add_item(button)
-            embed = discord.Embed(title = "Plex account not linked!", description=f"```❌ You don't have a Plex account linked to your Mazi account. Please link one before using any features as it is required.```", colour = discord.Colour.from_rgb(229,160,13))
+            embed = discord.Embed(title = "Plex account not linked!", description=f"```❌ You don't have a Plex account linked to your mommunist account. Please link one before using any features as it is required.```", colour = discord.Colour.from_rgb(229,160,13))
             embed.set_author(name = interaction.user.display_name, icon_url = interaction.user.display_avatar.url)
             await interaction.followup.send(embed=embed, view=view)
             return
@@ -63,22 +63,22 @@ class Search(commands.Cog):
         try:
             plexserver = data['plexserver']
             if len(plexserver) == 0:
-                button = discord.ui.Button(label="Link your Plex server", style=discord.ButtonStyle.link, url="https://mazi.pw/user")
-                button2 = discord.ui.Button(label="View example server URLS", style=discord.ButtonStyle.link, url="https://github.com/Wamy-Dev/Mazi/wiki/Examples")
+                button = discord.ui.Button(label="Link your Plex server", style=discord.ButtonStyle.link, url="https://mommunist.thecrimsontint.com/user")
+                button2 = discord.ui.Button(label="View example server URLS", style=discord.ButtonStyle.link, url="https://github.com/Wamy-Dev/mommunist/wiki/Examples")
                 view = discord.ui.View()
                 view.add_item(button)
                 view.add_item(button2)
-                embed = discord.Embed(title = "Plex Server not linked!", description=f"```❌ You don't have a Plex server linked to your Mazi account. Please add one as it is required to host sessions.```", colour = discord.Colour.from_rgb(229,160,13))
+                embed = discord.Embed(title = "Plex Server not linked!", description=f"```❌ You don't have a Plex server linked to your mommunist account. Please add one as it is required to host sessions.```", colour = discord.Colour.from_rgb(229,160,13))
                 embed.set_author(name = interaction.user.display_name, icon_url = interaction.user.display_avatar.url)
                 await interaction.followup.send(embed=embed, view=view)
                 return
         except:
-            button = discord.ui.Button(label="Link your Plex server", style=discord.ButtonStyle.link, url="https://mazi.pw/user")
-            button2 = discord.ui.Button(label="View example server URLS", style=discord.ButtonStyle.link, url="https://github.com/Wamy-Dev/Mazi/wiki/Examples")
+            button = discord.ui.Button(label="Link your Plex server", style=discord.ButtonStyle.link, url="https://mommunist.thecrimsontint.com/user")
+            button2 = discord.ui.Button(label="View example server URLS", style=discord.ButtonStyle.link, url="https://github.com/Wamy-Dev/mommunist/wiki/Examples")
             view = discord.ui.View()
             view.add_item(button)
             view.add_item(button2)
-            embed = discord.Embed(title = "Plex Server not linked!", description=f"```❌ You don't have a Plex server linked to your Mazi account. Please add one as it is required to host sessions.```", colour = discord.Colour.from_rgb(229,160,13))
+            embed = discord.Embed(title = "Plex Server not linked!", description=f"```❌ You don't have a Plex server linked to your mommunist account. Please add one as it is required to host sessions.```", colour = discord.Colour.from_rgb(229,160,13))
             embed.set_author(name = interaction.user.display_name, icon_url = interaction.user.display_avatar.url)
             await interaction.followup.send(embed=embed, view=view)
             return
@@ -89,23 +89,23 @@ class Search(commands.Cog):
             else:
                 plexlibrary = library
             if len(plexlibrary) == 0:
-                button = discord.ui.Button(label="Link your Plex server", style=discord.ButtonStyle.link, url="https://mazi.pw/user")
-                button2 = discord.ui.Button(label="View example library names", style=discord.ButtonStyle.link, url="https://github.com/Wamy-Dev/Mazi/wiki/Examples")
+                button = discord.ui.Button(label="Link your Plex server", style=discord.ButtonStyle.link, url="https://mommunist.thecrimsontint.com/user")
+                button2 = discord.ui.Button(label="View example library names", style=discord.ButtonStyle.link, url="https://github.com/Wamy-Dev/mommunist/wiki/Examples")
                 view = discord.ui.View()
                 view.add_item(button)
                 view.add_item(button2)
-                embed = discord.Embed(title = "Plex Library not linked!", description=f"```❌ You don't have a Plex library linked to your Mazi account. Please add one as it is required to host sessions.```", colour = discord.Colour.from_rgb(229,160,13))
+                embed = discord.Embed(title = "Plex Library not linked!", description=f"```❌ You don't have a Plex library linked to your mommunist account. Please add one as it is required to host sessions.```", colour = discord.Colour.from_rgb(229,160,13))
                 embed.set_author(name = interaction.user.display_name, icon_url = interaction.user.display_avatar.url)
                 await interaction.followup.send(embed=embed, view=view)
                 return
 
         except:
-            button = discord.ui.Button(label="Link your Plex server", style=discord.ButtonStyle.link, url="https://mazi.pw/user")
-            button2 = discord.ui.Button(label="View example library names", style=discord.ButtonStyle.link, url="https://github.com/Wamy-Dev/Mazi/wiki/Examples")
+            button = discord.ui.Button(label="Link your Plex server", style=discord.ButtonStyle.link, url="https://mommunist.thecrimsontint.com/user")
+            button2 = discord.ui.Button(label="View example library names", style=discord.ButtonStyle.link, url="https://github.com/Wamy-Dev/mommunist/wiki/Examples")
             view = discord.ui.View()
             view.add_item(button)
             view.add_item(button2)
-            embed = discord.Embed(title = "Plex Library not linked!", description=f"```❌ You don't have a Plex library linked to your Mazi account. Please add one as it is required to host sessions.```", colour = discord.Colour.from_rgb(229,160,13))
+            embed = discord.Embed(title = "Plex Library not linked!", description=f"```❌ You don't have a Plex library linked to your mommunist account. Please add one as it is required to host sessions.```", colour = discord.Colour.from_rgb(229,160,13))
             embed.set_author(name = interaction.user.display_name, icon_url = interaction.user.display_avatar.url)
             await interaction.followup.send(embed=embed, view=view)
             return
@@ -134,8 +134,8 @@ class Search(commands.Cog):
                     await interaction.followup.send(embed = embed)
             except Exception as e:
                 print(e)
-                button = discord.ui.Button(label="Fix accounts", style=discord.ButtonStyle.link, url="https://mazi.pw/user")
-                button2 = discord.ui.Button(label="View examples", style=discord.ButtonStyle.link, url="https://github.com/Wamy-Dev/Mazi/wiki/Examples")
+                button = discord.ui.Button(label="Fix accounts", style=discord.ButtonStyle.link, url="https://mommunist.thecrimsontint.com/user")
+                button2 = discord.ui.Button(label="View examples", style=discord.ButtonStyle.link, url="https://github.com/Wamy-Dev/mommunist/wiki/Examples")
                 view = discord.ui.View()
                 view.add_item(button)
                 view.add_item(button2)

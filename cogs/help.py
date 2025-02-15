@@ -11,7 +11,7 @@ class Help(commands.Cog):
 
     @app_commands.command(name="help", description="Shows the help dialogue.")
     async def help(self, interaction: Interaction):
-        list = ["Now with 100% more help!", "Now with slash commands!", "Cool cats watch movies.", "Runs on Plex and a little love.", "Help support Mazi by running /donate!", "Now showing, your movies!"]
+        list = ["Now with 100% more help!", "Now with slash commands!", "Cool cats watch movies.", "Runs on Plex and a little love.", "Help support mommunist by running /donate!", "Now showing, your movies!"]
         embed = discord.Embed(title = "Available commands", colour = discord.Colour.from_rgb(229,160,13))
         embed.set_author(name = interaction.user.display_name, icon_url = interaction.user.display_avatar.url)
         embed.set_footer(text = random.choice(list))

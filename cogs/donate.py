@@ -8,7 +8,7 @@ class Donate(commands.Cog):
     def __init__(self, client):
         self.client = client
 
-    @app_commands.command(name="donate", description="Doante to the Mazi project.")
+    @app_commands.command(name="donate", description="Doante to the mommunist project.")
     async def donate(self, interaction: Interaction):
 
         embed = discord.Embed(title = "Donate to the project", colour = discord.Colour.from_rgb(229,160,13))

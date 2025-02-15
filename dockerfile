@@ -1,5 +1,5 @@
 FROM python:3.8-alpine
-WORKDIR /Mazi
+WORKDIR /mommunist
 COPY . .
 
 RUN apk update && apk add --no-cache git gcc libffi-dev python3-dev libc-dev linux-headers

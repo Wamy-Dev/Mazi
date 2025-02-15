@@ -29,18 +29,18 @@ class Join(commands.Cog):
                 empty = False
                 data = doc.to_dict()
             if empty:
-                button = discord.ui.Button(label="Link your Discord account", style=discord.ButtonStyle.link, url="https://mazi.pw/user")
+                button = discord.ui.Button(label="Link your Discord account", style=discord.ButtonStyle.link, url="https://mommunist.thecrimsontint.com/user")
                 view = discord.ui.View()
                 view.add_item(button)
-                embed = discord.Embed(title = "Discord account not linked!", description=f"```❌ You don't have a Discord account linked to your Mazi account. You also may not have a Mazi account. Please create one if needed. Please link your Discord account before using any features as it is required.```", colour = discord.Colour.from_rgb(229,160,13))
+                embed = discord.Embed(title = "Discord account not linked!", description=f"```❌ You don't have a Discord account linked to your mommunist account. You also may not have a mommunist account. Please create one if needed. Please link your Discord account before using any features as it is required.```", colour = discord.Colour.from_rgb(229,160,13))
                 embed.set_author(name = interaction.user.display_name, icon_url = interaction.user.display_avatar.url)
                 await interaction.followup.send(embed=embed, view=view)
                 return
         except:
-            button = discord.ui.Button(label="Link your Discord account", style=discord.ButtonStyle.link, url="https://mazi.pw/user")
+            button = discord.ui.Button(label="Link your Discord account", style=discord.ButtonStyle.link, url="https://mommunist.thecrimsontint.com/user")
             view = discord.ui.View()
             view.add_item(button)
-            embed = discord.Embed(title = "Discord account not linked!", description=f"```❌ You don't have a Discord account linked to your Mazi account. You also may not have a Mazi account. Please create one if needed. Please link your Discord account before using any features as it is required.```", colour = discord.Colour.from_rgb(229,160,13))
+            embed = discord.Embed(title = "Discord account not linked!", description=f"```❌ You don't have a Discord account linked to your mommunist account. You also may not have a mommunist account. Please create one if needed. Please link your Discord account before using any features as it is required.```", colour = discord.Colour.from_rgb(229,160,13))
             embed.set_author(name = interaction.user.display_name, icon_url = interaction.user.display_avatar.url)
             await interaction.followup.send(embed=embed, view=view)
             return
@@ -48,10 +48,10 @@ class Join(commands.Cog):
         try:
             plexstatus = data['plex']
         except:
-            button = discord.ui.Button(label="Link your Plex account", style=discord.ButtonStyle.link, url="https://mazi.pw/user")
+            button = discord.ui.Button(label="Link your Plex account", style=discord.ButtonStyle.link, url="https://mommunist.thecrimsontint.com/user")
             view = discord.ui.View()
             view.add_item(button)
-            embed = discord.Embed(title = "Plex Library not linked!", description=f"```❌ You don't have a Plex account linked to your Mazi account. Please link one before using any features as it is required.```", colour = discord.Colour.from_rgb(229,160,13))
+            embed = discord.Embed(title = "Plex Library not linked!", description=f"```❌ You don't have a Plex account linked to your mommunist account. Please link one before using any features as it is required.```", colour = discord.Colour.from_rgb(229,160,13))
             embed.set_author(name = interaction.user.display_name, icon_url = interaction.user.display_avatar.url)
             await interaction.followup.send(embed=embed, view=view)
             return
